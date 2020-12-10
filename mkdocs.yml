@@ -62,35 +62,35 @@ markdown_extensions:
 
 # Navigation
 nav:
-  - Home: 'index.md'
-  - Prerequisites:
-    - Get Started: 'prereqs/environment/index.md'
-    - Connect to the Session Manager Workstation: 'prereqs/connect/index.md'
-  - Provisioned:
-    - Create a New DB Cluster: 'provisioned/create/index.md'
-    - Connect, Load Data and Auto Scale: 'provisioned/interact/index.md'
-    - Clone a DB Cluster: 'provisioned/clone/index.md'
-    - Backtrack a DB Cluster: 'provisioned/backtrack/index.md'
-    - Use Performance Insights: 'provisioned/perf-insights/index.md'
-    - Test Fault Tolerance: 'provisioned/failover/index.md'
-    - Set up Database Activity Streams: 'provisioned/das/index.md'
-  - Global Database:
-    - Deploy a Global Database: 'global/deploy/index.md'
-    - Connect an Application: 'global/biapp/index.md'
-    - Monitor a Global Database: 'global/monitor/index.md'
+  - 홈: 'index.md'
+  - 필수 구성 요소:
+    - 랩 시작: 'prereqs/environment/index.md'
+    - Session Manager를 이용하여 워크 스테이션에 연결: 'prereqs/connect/index.md'
+  - 프로비저닝:
+    - DB 클러스터 생성: 'provisioned/create/index.md'
+    - DB 연결, 데이터로드 및 오토 스케일: 'provisioned/interact/index.md'
+    - DB 클러스터 복제: 'provisioned/clone/index.md'
+    - DB 클러스터 역추적: 'provisioned/backtrack/index.md'
+    - 성능개선 도우미 사용: 'provisioned/perf-insights/index.md'
+    - 내결함성 테스트: 'provisioned/failover/index.md'
+    - 데이터베이스 활동 스트림 설정: 'provisioned/das/index.md'
+  - 글로벌 데이터베이스:
+    - 글로벌 데이터베이스 배포: 'global/deploy/index.md'
+    - 애플리케이션 연동: 'global/biapp/index.md'
+    - 글로벌 데이터베이스 모니터링: 'global/monitor/index.md'
 #    - Deploy a Global eCommerce Application: 'global/ecomm/index.md'
 #    - Ingest Data from Multiple Regions: 'global/ingest/index.md'
-    - Fail Over a Global Database: 'global/failover/index.md'
-    - Fail Back a Global Database: 'global/failback/index.md'
-  - Serverless:
-    - Create an Aurora Serverless DB Cluster: 'serverless/create/index.md'
-    - Use Aurora Serverless with AWS Lambda Functions: 'serverless/dataapi/index.md'
-  - Machine Learning:
-    - Overview and Prerequisites: 'ml/overview/index.md'
-    - Use Comprehend with Aurora: 'ml/comprehend/index.md'
-    - Use SageMaker with Aurora: 'ml/sagemaker/index.md'
-    - Cleanup Lab Resources: 'ml/cleanup/index.md'
-  - Related:
+    - 글로벌 데이터베이스 페일 오버: 'global/failover/index.md'
+    - 글로벌 데이터베이스 페일 백: 'global/failback/index.md'
+  - 서버리스:
+    - Aurora 서버리스 DB 클러스터 생성: 'serverless/create/index.md'
+    - AWS Lambda 함수와 함께 Aurora 서버리스 사용: 'serverless/dataapi/index.md'
+  - 기계 학습:
+    - 개요 및 전제 조건: 'ml/overview/index.md'
+    - Aurora와 함께 Comprehend 사용: 'ml/comprehend/index.md'
+    - Aurora와 함께 SageMaker 사용: 'ml/sagemaker/index.md'
+    - 리소스 정리: 'ml/cleanup/index.md'
+  - 관련있는 워크샵:
     - Labs and Workshops: 'related/labs/index.md'
   - Win the Data:
     - Get Started: 'win/index.md'

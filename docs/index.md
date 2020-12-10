@@ -2,89 +2,92 @@
 
 <div class="aurora"><img src="/assets/images/amazon-aurora.svg"></div>
 
-Welcome to the AWS workshop and lab content portal for <a href="https://aws.amazon.com/rds/aurora/details/mysql-details/" target="_blank">Amazon Aurora MySQL</a> compatible databases! Here you will find a collection of workshops and other hands-on content aimed at helping you gain an understanding of the Amazon Aurora features and capabilities.
+<a href="https://aws.amazon.com/rds/aurora/details/mysql-details/" target="_blank">Amazon Aurora MySQL</a> 데이터베이스에 대한 AWS 워크샵 및 실습 콘텐츠 포털에 오신것을 환영합니다! 여기에서 Amazon Aurora 기능에 대한 이해를 돕기위한 워크샵 및 기타 실습 콘텐츠들을 배우실 수 있습니다.
 
-The resources on this site include a collection of easy to follow instructions with examples, templates to help you get started and scripts automating tasks supporting the hands-on labs. These resources are focused on helping you discover how advanced features of the Amazon Aurora MySQL database operate. Prior expertise with AWS and MySQL-based databases is beneficial, but not required to complete the labs.
+이 사이트에는 예제와 오로라를 시작하는데 도움이되는 템플릿 및 실습 랩을 지원하는 작업을 자동화하는 스크립트가 포함된 따라하기 쉬운 내용이 포함되어 있습니다. 이러한 리소스는 Amazon Aurora MySQL 데이터베이스의 고급 기능이 작동하는 방식을 발견하는데 중점을 둡니다. AWS 및 MySQL 기반 데이터베이스에 대한 사전 전문 지식이 도움이 되지만 실습을 완료하는데 필요하지는 않습니다.
 
 
-## Overview of labs
+## 실습 개요
 
-The following labs are currently available, click on the relevant tab to see the labs for that topic:
+현재 다음 실습을 사용할 수 있습니다. 해당 주제에 대한 실습을 보려면 관련 탭을 클릭하십시오.
 
-=== "Prerequisites"
-    You will need to complete the following prerequisites before running any other labs. **Do this first!**
+=== "필수 구성 요소"
+    다른 실습을 실행하기 전에 다음 사전 요구 사항을 완료해야 합니다. **이것을 먼저하십시오!**
 
-    # | Lab Module | Recommendation | Overview
+    # | 실습 모듈 | 추천 | 개요
     --- | --- | --- | ---
-    P1 | [**Get started using the lab environment**](/prereqs/environment/) | **Required, start here** | Set up the lab environment and provision the prerequisite resources.
-    P2 | [**Connect to the Session Manager workstation**](/prereqs/connect/) | **Required** | Connect to the EC2 based workstation using Session Manager, so you can interact with the database.
+    P1 | [**랩 환경 사용 시작**](/prereqs/environment/) | **필수, 여기부터 시작하세요** | 랩 환경을 설정하고 필수 리소스를 프로비저닝 합니다.
+    P2 | [**Session Manager를 이용하여 워크 스테이션에 연결**](/prereqs/connect/) | **필수** | Session Manager를 사용하여 EC2 기반 워크 스테이션에 연결하면 데이터베이스를 사용할 수 있습니다.
 
-
-=== "Provisioned"
-    # | Lab Module | Recommendation | Overview
+=== "프로비저닝"
+    # | 실습 모듈 | 추천 | 개요
     --- | --- | --- | ---
-    R1 | [**Create a New DB Cluster**](/provisioned/create/) | Optional | Create a new Amazon Aurora MySQL DB cluster manually. This is optional, as you can also deploy the environment with a cluster provisioned automatically for you.
-    R2 | [**Connect, Load Data and Auto Scale**](/provisioned/interact/) | Recommended | Connect to the DB cluster, load an initial data set from S3 and test read replica auto scaling. The initial data set may be used in subsequent labs.
-    R3 | [**Clone a DB Cluster**](/provisioned/clone/) | Recommended | Clone an Aurora DB cluster and observing the divergence of the data set.
-    R4 | [**Backtrack a DB Cluster**](/provisioned/backtrack/) | Recommended | Backtrack an Aurora DB cluster to fix an accidental DDL operation.
-    R5 | [**Use Performance Insights**](/provisioned/perf-insights/) | Recommended | Examine the performance of your DB instances using RDS Performance Insights.
-    R6 | [**Test Fault Tolerance**](/provisioned/failover/) | Recommended | Examine the failover process in Amazon Aurora MySQL and how it can be optimized.
-    R7 | [**Set up Database Activity Streams**](/provisioned/das/) | Recommended | Monitor your database activity by using Database Activity Streams.
+    R1 | [**DB 클러스터 생성**](/provisioned/create/) | 선택 | 새로운 Amazon Aurora MySQL DB 클러스터를 수동으로 생성합니다. 자동으로 프로비저닝된 클러스터를 사용하여 환경을 배포할 수도 있으므로 이는 선택 사항입니다.
+    R2 | [**DB 연결, 데이터로드 및 오토 스케일**](/provisioned/interact/) | 추천 | DB 클러스터에 연결하고 S3에서 초기 데이터 세트를 로드하고 읽기 전용 복제본 Auto Scaling을 테스트합니다. 초기 데이터 세트는 후속 실습에서 사용될 수 있습니다.
+    R3 | [**DB 클러스터 복제**](/provisioned/clone/) | 추천 | Aurora DB 클러스터를 복제하고 데이터 세트의 차이를 확인합니다.
+    R4 | [**DB 클러스터 역추적**](/provisioned/backtrack/) | 추천 | Aurora DB 클러스터를 역추적하여 잘못된 DDL 작업을 수정합니다.
+    R5 | [**성능개선 도우미 사용**](/provisioned/perf-insights/) | 추천 | RDS 성능 개선 도우미를 사용하여 DB 인스턴스의 성능을 확인합니다.
+    R6 | [**내결함성 테스트**](/provisioned/failover/) | 추천 | Amazon Aurora MySQL의 장애 조치 프로세스와 최적화 방법을 살펴봅니다.
+    R7 | [**데이터베이스 활동 스트림 설정**](/provisioned/das/) | 추천 | 데이터베이스 활동 스트림을 사용하여 데이터베이스 활동을 모니터링 합니다.
 
 
-=== "Serverless"
-    # | Lab Module | Recommendation | Overview
+=== "서버리스"
+    # | 실습 모듈 | 추천 | 개요
     --- | --- | --- | ---
-    S1 | [**Create an Aurora Serverless DB cluster**](/serverless/create/) | Required | Create a new Amazon Aurora Serverless MySQL DB cluster manually.
-    S2 | [**Use Aurora Serverless with AWS Lambda functions**](/serverless/dataapi/) | Recommended | Connect to your DB cluster using the RDS Data API and Lambda functions.
+    S1 | [**Aurora 서버리스 DB 클러스터 생성**](/serverless/create/) | 필수 | 새로운 Amazon Aurora Serverless MySQL DB 클러스터를 수동으로 생성합니다.
+    S2 | [**AWS Lambda 함수와 함께 Aurora 서버리스 사용**](/serverless/dataapi/) | 추천 | RDS Data API 및 Lambda 함수를 사용하여 DB 클러스터에 연결합니다.
 
 
-=== "Global Database"
-    # | Lab Module | Recommendation | Overview
+
+=== "글로벌 데이터베이스"
+    # | 실습 모듈 | 추천 | 개요
     --- | --- | --- | ---
-    G1 | [**Deploy a Global Database**](/global/deploy/) | Required | Create a Global Database which will span across multiple regions.
-    G3 | [**Connect an Application**](/global/biapp/) | Recommended | Connect a Business Intelligence application to the Global Database.
-    G4 | [**Monitor a Global Database**](/global/monitor/) | Recommended | Create an Amazon CloudWatch Dashboard to monitor the latency, replicated I/O, and the cross region replication data transfer of the Global Database.
-    G5 | [**Fail Over a Global Database**](/global/failover/) | Recommended | Simulate a regional failure and DR scenario, and promote the secondary region in a Global Database.
-    G6 | [**Fail Back a Global Database**](/global/failback/) | Optional | Restore full operations in the original primary region for the Global Database after a failover.
+    G1 | [**글로벌 데이터베이스 배포**](/global/deploy/) | 필수 | 여러 지역에 걸쳐있는 글로벌 데이터베이스를 만듭니다.
+    G3 | [**애플리케이션 연동**](/global/biapp/) | 추천 | BI 애플리케이션을 글로벌 데이터베이스에 연결합니다.
+    G4 | [**글로벌 데이터베이스 모니터링**](/global/monitor/) | 추천 | Amazon CloudWatch 대시 보드를 생성하여 글로벌 데이터베이스의 지연 시간, 복제된 I/O 및 교차 리전 복제 데이터 전송을 모니터링합니다.
+    G5 | [**글로벌 데이터베이스 페일 오버**](/global/failover/) | 추천 | 리전 장애 및 DR 시나리오를 시뮬레이션하고 글로벌 데이터베이스에서 보조 리전을 승격합니다.
+    G6 | [**글로벌 데이터베이스 페일 백**](/global/failback/) | 선택 | 장애 조치 후 글로벌 데이터베이스의 원래 기본 리전에서 전체 작업을 복원합니다.
 
 
-=== "Machine Learning"
-    # | Lab Module | Recommendation | Overview
+
+=== "기계 학습"
+    # | 실습 모듈 | 추천 | 개요
     --- | --- | --- | ---
-    M1 | [**Overview and Prerequisites**](/ml/overview/) | Required | Setup a sample schema and data for machine learning integration.
-    M2 | [**Use Comprehend with Aurora**](/ml/comprehend/) | Recommended | Integrate Aurora with the Comprehend Sentiment Analysis API and make sentiment analysis inferences via SQL commands.
-    M3 | [**Use SageMaker with Aurora**](/ml/sagemaker/) | Recommended | Integrate Aurora with SageMaker Endpoints to infer customer churn in a data set using SQL commands.
-    M4 | [**Cleanup Lab Resources**](/ml/cleanup/) | Recommended | Clean up after the labs and remove unneeded AWS resources.       
-
-You can also discover other exercises, labs and workshops related to Amazon Aurora on the [Related Labs and Workshops](/related/labs/) page.
+    M1 | [**개요 및 전제 조건**](/ml/overview/) | 필수 | 기계학습 통합을 위한 샘플 스키마 및 데이터를 설정합니다.
+    M2 | [**Aurora와 함께 Comprehend 사용**](/ml/comprehend/) | 추천 | Aurora를 Comprehend Sentiment Analysis API와 통합하고 SQL 명령을 통해 감정 분석 추론을 수행합니다.
+    M3 | [**Aurora와 함께 SageMaker 사용**](/ml/sagemaker/) | 추천 | Aurora를 SageMaker Endpoints와 통합하여 SQL 명령을 사용하여 데이터 세트에서 고객 이탈을 추론합니다.
+    M4 | [**리소스 정리**](/ml/cleanup/) | 추천 | 실습후 불필요한 AWS 리소스를 제거합니다.      
 
 
-## Lab environment at a glance
+[실습 및 워크샵과 관련된](/related/labs/)페이지에서 Amazon Aurora와 관련된 다른 실습, 실습 및 워크샵을 찾을 수도 있습니다 .
 
-To simplify the getting started experience with the labs, we have created foundational templates for <a href="https://aws.amazon.com/cloudformation/" target="_blank">AWS CloudFormation</a> that provision the resources needed for the lab environment. These templates are designed to deploy a consistent networking infrastructure, and client-side experience of software packages and components used in the lab.
+## 한눈에 보는 랩 환경
+
+실습시 경험을 단순화하기 위해 실습 환경에 필요한 리소스를 프로비저닝하는 <a href="https://aws.amazon.com/cloudformation/" target="_blank">AWS CloudFormation</a>용 기본 템플릿을 제공합니다. 이러한 템플릿은 일관된 네트워킹 인프라와 랩에서 사용되는 소프트웨어 패키지 및 구성 요소의 클라이언트측 환경을 배포하도록 설계되었습니다.
 
 <div class="architecture"><img src="/assets/images/generic-architecture.png"></div>
 
-The environment deployed using CloudFormation includes several components:
-
-*	<a href="https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html" target="_blank">Amazon VPC</a> network configuration with public and private subnets
-*	<a href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.WorkingWithRDSInstanceinaVPC.html#USER_VPC.Subnets" target="_blank">Database subnet group</a> and relevant <a href="https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html" target="_blank">security groups</a> for the cluster and workstation
-*	<a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Instances.html" target="_blank">Amazon EC2 instance</a> configured with the software components needed for the lab
-*	<a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html" target="_blank">IAM roles</a> with access permissions for the workstation and cluster permissions for <a href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html" target="_blank">enhanced monitoring</a>, S3 access and logging
-*	Custom cluster and DB instance <a href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithParamGroups.html" target="_blank">parameter groups</a> for the Amazon Aurora cluster, enabling logging and performance schema
-*	Optionally, <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html" target="_blank">Amazon Aurora</a> DB cluster with 2 nodes: a writer and read replica
-* If the cluster is created for you, the master database credentials will be generated automatically and stored in an <A href="https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html" target="_blank">AWS Secrets Manager</a> secret.
-*	Optionally, <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Integrating.AutoScaling.html" target="_blank">read replica auto scaling</a> configuration
-*	Optionally, <a href="https://docs.aws.amazon.com/systems-manager/latest/userguide/what-is-systems-manager.html" target="_blank">AWS Systems Manager</a> command document to execute a load test
+CloudFormation을 사용하여 배포 된 환경에는 여러 구성 요소가 포함됩니다.
 
 
-## Additional software needed for labs
+*	퍼블릭 및 프라이빗 서브넷이있는 <a href="https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html" target="_blank">Amazon VPC</a> 네트워크 구성
+*	클러스터 및 워크 스테이션에 대한 <a href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.WorkingWithRDSInstanceinaVPC.html#USER_VPC.Subnets" target="_blank">데이터베이스 서브넷 그룹</a> 및 관련 <a href="https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html" target="_blank">보안 그룹</a>
+*	실습에 필요한 소프트웨어 컴포넌드들로 구성된 <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Instances.html" target="_blank">Amazon EC2 인스턴스</a>
+*	<a href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html" target="_blank">향상된 모니터링</a>, S3 액세스 및 로깅을 위한 워크 스테이션 및 클러스터에 대한 액세스 권한이 있는 <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html" target="_blank">IAM 역할</a>
+*	Amazon Aurora 클러스터를 위한 사용자 지정 클러스터 및 DB 인스턴스 <a href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithParamGroups.html" target="_blank">파라미터 그룹</a>으로 로깅 및 성능 스키마 활성화
+*	옵션, 2개 노드가 있는 <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html" target="_blank">Amazon Aurora</a> DB 클러스터 : 쓰기 및 읽기 전용 복제본
+*   클러스터가 생성된 경우 마스터 데이터베이스 자격 증명이 자동으로 생성되어 <A href="https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html" target="_blank">AWS Secrets Manager</a>에 저장됩니다.
+*	옵션, <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Integrating.AutoScaling.html" target="_blank">읽기 전용 복제본 자동 확장</a> 구성
+*	옵션, 로드 테스트를 실행하기위한 <a href="https://docs.aws.amazon.com/systems-manager/latest/userguide/what-is-systems-manager.html" target="_blank">AWS Systems Manager</a> command 문서
 
-You do not need any special software on the computer you are using for these labs, except an up to date web browser. The templates and scripts setting up the lab environment install the following software in the lab environment for the purposes of deploying and running the labs:
 
-* [mysql-client](https://dev.mysql.com/doc/refman/5.6/en/programs-client.html) package. MySQL open source software is provided under the GPL License.
-* [sysbench](https://github.com/akopytov/sysbench) available using the GPL License.
-* [test_db](https://github.com/datacharmer/test_db) available using the Creative Commons Attribution-Share Alike 3.0 Unported License.
-* [Percona's sysbench-tpcc](https://github.com/Percona-Lab/sysbench-tpcc) available using the Apache License 2.0.
-* [Apache Superset](https://superset.apache.org/index.html) available using the Apache License 2.0.
+## 실습에 필요한 추가 소프트웨어
+
+최신 웹 브라우저를 제외하고 이 실습에 사용중인 컴퓨터에는 특별한 소프트웨어가 필요하지 않습니다. 랩 환경을 설정하는 템플릿 및 스크립트는 랩 배포 및 실행을 위해 랩 환경에 다음 소프트웨어를 설치합니다.
+
+
+* [mysql-client](https://dev.mysql.com/doc/refman/5.6/en/programs-client.html) 패키지. MySQL 오픈 소스 소프트웨어는 GPL 라이선스에 따라 제공됩니다.
+* GPL 라이선스를 사용하여 [sysbench](https://github.com/akopytov/sysbench)를 사용할 수 있습니다. 
+* Creative Commons Attribution-Share Alike 3.0 Unported License를 사용하여 [test_db](https://github.com/datacharmer/test_db)를 사용할 수 있습니다.
+* Apache License 2.0을 사용하여 [Percona sysbench-tpcc](https://github.com/Percona-Lab/sysbench-tpcc)를 사용할 수 있습니다. available using the Apache License 2.0.
+* Apache License 2.0을 사용하여 [Apache Superset](https://superset.apache.org/index.html)을 사용할 수 있습니다.
