@@ -1,47 +1,46 @@
-# Connect, Load Data and Auto Scale
+# DB 연결, 데이터 로드 및 오토 스케일
 
-This lab will walk you through the process of connecting to the DB cluster you have just created, and using the cluster for the first time. At the end you will test out how Aurora read replica auto scaling works in practice using a load generator script.
+이 실습에서는 방금 생성한 DB 클러스터에 연결하고 처음으로 클러스터를 사용하는 과정을 안내합니다. 마지막으로 부하 발생 스크립트를 사용하여 Aurora 읽기 전용 복제본 Auto Scaling이 실제로 어떻게 작동하는지 테스트합니다.
 
-This lab contains the following tasks:
+이 실습에는 다음 작업이 포함됩니다.
 
-1. Connect to the DB cluster
-2. Load an initial data set from S3
-3. Run a read-only workload
+1. DB 클러스터에 연결
+2. S3에서 초기 데이터 세트로드
+3. 읽기 전용 워크로드 실행
 
-This lab requires the following prerequisites:
+이 실습에는 다음 전제 조건이 필요합니다.
 
-* [Get Started](/prereqs/environment/)
-* [Connect to the Session Manager Workstation](/prereqs/connect/)
-* [Create a New DB Cluster](/provisioned/create/) (conditional, only if you plan to create a cluster manually)
+* [시작](/prereqs/environment/)
+* [Session Manager 워크스테이션에 연결](/prereqs/connect/)
+* [새 DB 클러스터 생성](/provisioned/create/) (클러스터를 수동으로 생성하려는 경우)
 
 
-## 1. Connect to the DB cluster
+## 1. DB 클러스터에 연결
 
-Connect to the Aurora database just like you would to any other MySQL-based database, using a compatible client tool. In this lab you will be using the `mysql` command line tool to connect.
+클라이언트 도구를 사용하여 다른 MySQL기반 데이터베이스와 마찬가지로 Aurora 데이터베이스에 연결합니다. 이 실습에서는 `mysql` 명령줄을 사용하여 연결합니다.
 
-If you are not already connected to the Session Manager workstation command line from previous labs, please connect [following these instructions](/prereqs/connect/). Once connected, run the command below, replacing the ==[clusterEndpont]== placeholder with the cluster endpoint of your DB cluster.
+이전 실습의 Session Manager 워크스테이션 명령줄(Command line)에 아직 연결하지 않은 경우 [다음](/prereqs/connect/)과 같이 연결하십시오. 연결되면 아래 명령을 실행하여 ==[clusterEndpoint]== 에 DB 클러스터 엔드포인트의 값으로 변경합니다.
 
-!!! tip "Where do I find the cluster endpoint (or any other placeholder parameters)?"
-    If you have completed the previous lab, and created the Aurora DB cluster manually, you would find the value of the cluster endpoint on the DB cluster details page in the RDS console, as noted at Step 2. in that lab.
+!!! tip "클러스터 엔드포인트는 어디에서 찾을 수 있습니까?""
+	이전 실습을 완료하고 Aurora DB 클러스터를 수동으로 생성 한 경우 해당 실습의 2단계에서 설명한대로 RDS 콘솔의 DB 클러스터 세부 정보 페이지에서 클러스터 엔드포인트의 값을 찾을 수 있습니다.
 
-    If you are participating in a formal workshop, and the lab environment was provisioned for you using Event Engine, the value of the cluster endpoint may be found on the Team Dashboard in Event Engine.
+	공식 워크숍에 참여하고 있으며 이벤트 엔진을 사용하여 랩 환경이 프로비저닝된 경우 클러스터 엔드포인트의 값은 이벤트 엔진의 팀 대시 보드에서 찾을 수 있습니다.
 
-    Otherwise, you can retrieve the cluster endpoint from the CloudFormation stack **Outputs** as indicated in the [Get Started](/prereqs/environment/) prerequisites module.
+	그렇지 않으면 시작하기 전제 조건 모듈에 표시된대로 CloudFormation 스택 출력에서 클러스터 엔드포인트를 검색 할 수 있습니다.
 
 ```shell
 mysql -h[clusterEndpoint] -u$DBUSER -p"$DBPASS" mylab
 ```
+??? tip "이 모든 파라미터는 무엇을 의미합니까?""
+	적절한 CloudFormation 템플릿을 사용하여 DB 클러스터가 자동으로 생성되도록 선택한 경우 DB 클러스터의 데이터베이스 자격 증명이 자동으로 설정됩니다. 또한 이름이 mylab으로 지정된 스키마도 생성했습니다. 자격 증명은 AWS SecretsManager 암호에 저장되었습니다.
 
-??? tip "What do all these parameters mean?"
-    If you opted to have the DB cluster be created automatically for you using the appropriate CloudFormation template, we have set the DB cluster's database credentials automatically for you. We have also created the schema named `mylab` as well. The credentials were saved to an <a href="https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html" target="_blank">AWS SecretsManager</a> secret.
-
-    You can view and retrieve the credentials stored in the secret using the following command:
+	다음 명령을 사용하여 저장된 자격 증명을 볼 수 있습니다.
 
     ```shell
     aws secretsmanager get-secret-value --secret-id [secretArn] | jq -r '.SecretString'
     ```
 
-Once connected to the database, use the code below to create a stored procedure we'll use later in the lab, to generate load on the DB cluster. Run the following SQL queries:
+데이터베이스에 연결되면 아래 코드를 사용하여 나중에 실습에서 사용할 저장 프로시저를 생성하여 DB 클러스터에 부하를 생성합니다. 	다음 SQL 쿼리를 실행합니다.
 
 ```sql
 DELIMITER $$
@@ -60,9 +59,11 @@ DELIMITER ;
 ```
 
 
-## 2. Load an initial data set from S3
+## 2. S3에서 초기 데이터 세트 로드
 
-Once connected to the DB cluster, run the following SQL queries to create an initial table:
+
+DB 클러스터에 연결되면 다음 SQL 쿼리를 실행하여 초기 테이블을 생성합니다.
+
 
 ```sql
 DROP TABLE IF EXISTS `sbtest1`;
@@ -76,7 +77,8 @@ KEY `k_1` (`k`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 ```
 
-Next, load an initial data set by importing data from an Amazon S3 bucket:
+다음으로 Amazon S3 버킷에서 데이터를 가져와서 초기 데이터 세트를 로드합니다.
+
 
 ```sql
 LOAD DATA FROM S3 MANIFEST
@@ -88,38 +90,42 @@ FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\r\n';
 ```
 
-Data loading may take several minutes, you will receive a successful query message once it completes. When completed, exit the MySQL command line:
+데이터로드는 몇 분 정도 걸릴 수 있으며 완료되면 성공적인 메시지를 받게됩니다. 완료되면 MySQL 명령 줄을 종료합니다.
+
 
 ```sql
 quit;
 ```
 
 
-## 3. Run a read-only workload
+## 3. 읽기 전용 워크로드 실행
 
-Once the data load completes successfully, you can run a read-only workload to generate load on the cluster. You will also observe the effects on the DB cluster topology. For this step you will use the **Reader Endpoint** of the cluster. If you created the cluster manually, you can find the endpoint value as indicated in that lab. If the DB cluster was created automatically for you the value can be found in your CloudFormation stack outputs.
+데이터로드가 성공적으로 완료되면 읽기 전용 워크로드를 실행하여 클러스터에 대한로드를 생성할 수 있습니다. 또한 DB 클러스터 토폴로지에 미치는 영향을 관찰합니다. 이 단계에서는 클러스터의 **리더 엔드포인트**를 사용 합니다. 클러스터를 수동으로 생성한 경우 해당 실습에 표시된대로 엔드 포인트 값을 찾을 수 있습니다. DB 클러스터가 자동으로 생성된 경우 CloudFormation 스택 출력에서 ​​값을 찾을 수 있습니다.
 
-Run the load generation script from the Session Manager workstation command line, replacing the ==[readerEndpoint]== placeholder with the reader endpoint:
+Session Manager 워크 스테이션 명령 줄에서 ==[readerEndpoint]== 를 리더 엔드포인트로 변경하고 부하 발생 스크립트를 실행합니다.
 
 ```shell
 python3 reader_loadtest.py -e[readerEndpoint] -u$DBUSER -p"$DBPASS" -dmylab
 ```
 
-Now, open the <a href="https://console.aws.amazon.com/rds/home#databases:" target="_blank">Amazon RDS service console</a> in a different browser tab.
+이제 다른 브라우저 탭에서 <a href="https://console.aws.amazon.com/rds/home#databases:" target="_blank">Amazon RDS 서비스 콘솔</a>을 엽니다.
 
-!!! warning "Region Check"
-    Ensure you are still working in the correct region, especially if you are following the links above to open the service console at the right screen.
+!!! warning "리전 확인"
+    특히 위의 링크를 따라 서비스 콘솔을 여는 경우 올바른 리전에서 여전히 작업하고 있는지 확인하십시오.
 
-Take note that the reader node is currently receiving load. It may take a minute or more for the metrics to fully reflect the incoming load.
+
+
+리더 노드가 현재 부하를 받고 있다는 점에 유의하십시오. 메트릭이 들어오는 부하를 완전히 반영하는데는 1분 이상 걸릴 수 있습니다.
 
 <span class="image">![Reader Load](3-read-load.png?raw=true)</span>
 
-After several minutes return to the list of instances and notice that a new reader is being provisioned to your cluster.
+몇 분 후 인스턴스 목록으로 돌아가서 새 리더가 클러스터에 프로비저닝되고 있음을 확인합니다.
 
 <span class="image">![Application Auto Scaling Creating Reader](3-aas-create-reader.png?raw=true)</span>
 
-Once the new replica becomes available, note that the load distributes and stabilizes (it may take a few minutes to stabilize).
+
+새 복제본을 사용할 수 있게 되면 부하가 분산되고 안정화됩니다(안정화되는데 몇 분 정도 걸릴 수 있음).
 
 <span class="image">![Application Auto Scaling Creating Reader](3-read-load-balanced.png?raw=true)</span>
 
-You can now toggle back to the Session Manager command line, and type `CTRL+C` to quit the load generator. After a while the additional reader will be removed automatically.
+이제 Session Manager 명령줄로 다시 전환하고 CTRL+C입력하여 부하 발생기를 종료할 수 있습니다. 잠시 후 추가된 리더가 자동으로 제거됩니다.
