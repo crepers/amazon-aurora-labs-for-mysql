@@ -71,7 +71,7 @@ nav:
     - DB 연결, 데이터로드 및 오토 스케일: 'provisioned/interact/index.md'
     - DB 클러스터 복제: 'provisioned/clone/index.md'
     - DB 클러스터 역추적: 'provisioned/backtrack/index.md'
-    - 성능개선 도우미 사용: 'provisioned/perf-insights/index.md'
+    - 성능 개선 도우미 사용: 'provisioned/perf-insights/index.md'
     - 내결함성 테스트: 'provisioned/failover/index.md'
     - 데이터베이스 활동 스트림 설정: 'provisioned/das/index.md'
   - 글로벌 데이터베이스:

@@ -26,7 +26,7 @@
     R2 | [**DB 연결, 데이터로드 및 오토 스케일**](/provisioned/interact/) | 추천 | DB 클러스터에 연결하고 S3에서 초기 데이터 세트를 로드하고 읽기 전용 복제본 Auto Scaling을 테스트합니다. 초기 데이터 세트는 후속 실습에서 사용될 수 있습니다.
     R3 | [**DB 클러스터 복제**](/provisioned/clone/) | 추천 | Aurora DB 클러스터를 복제하고 데이터 세트의 차이를 확인합니다.
     R4 | [**DB 클러스터 역추적**](/provisioned/backtrack/) | 추천 | Aurora DB 클러스터를 역추적하여 잘못된 DDL 작업을 수정합니다.
-    R5 | [**성능개선 도우미 사용**](/provisioned/perf-insights/) | 추천 | RDS 성능 개선 도우미를 사용하여 DB 인스턴스의 성능을 확인합니다.
+    R5 | [**성능 개선 도우미 사용**](/provisioned/perf-insights/) | 추천 | RDS 성능 개선 도우미를 사용하여 DB 인스턴스의 성능을 확인합니다.
     R6 | [**내결함성 테스트**](/provisioned/failover/) | 추천 | Amazon Aurora MySQL의 장애 조치 프로세스와 최적화 방법을 살펴봅니다.
     R7 | [**데이터베이스 활동 스트림 설정**](/provisioned/das/) | 추천 | 데이터베이스 활동 스트림을 사용하여 데이터베이스 활동을 모니터링 합니다.
 
