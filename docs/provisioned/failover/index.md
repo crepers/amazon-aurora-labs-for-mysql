@@ -1,47 +1,51 @@
-# Testing Fault Tolerance
+# 내결함성 테스트
 
-This lab will test the high availability and fault tolerance features provided by Amazon Aurora. You can find more details on the <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.AuroraHighAvailability.html" target="_blank">high availability</a> features and <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html" target="_blank">connection management</a> best practices in our documentation. These tests are designed to touch upon the most important aspects of failure recovery, and are not intended to be exhaustive for all failure conditions.
+이 실습에서는 Amazon Aurora에서 제공하는 고가용성 및 내결함성 기능을 테스트합니다. 문서에서 <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.AuroraHighAvailability.html" target="_blank">고가용성</a> 기능 및 <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html" target="_blank">연결 관리</a> 모범 사례에 대한 자세한 내용을 찾을 수 있습니다. 이러한 테스트는 장애 복구의 가장 중요한 측면을 다루기 위해 설계되었으며 모든 장애 조건에 대해 포괄적인 것은 아닙니다.
 
-??? tip "Learn more about High Availability in Amazon Aurora"
-    In Amazon Aurora, high availability (HA) is implemented by deploying a cluster with a minimum of two DB instances, a writer in one Availability Zone, and a reader in a different Availability Zone. We call this configuration **Multi-AZ**. If you have provisioned the DB cluster using CloudFormation in the [Prerequisites](/modules/prerequisites/) lab, or have created the DB cluster manually, by following the [Creating a New Aurora Cluster](/modules/create) lab, you have deployed a **Multi-AZ** Aurora DB cluster.
+??? tip "Amazon Aurora의 고 가용성에 대해 자세히 알아보기"
+    Amazon Aurora에서 고가용성 (HA)은 최소 2개의 DB 인스턴스, 하나의 가용 영역에 쓰기, 다른 가용 영역에 읽기 복제본이있는 클러스터를 배포하여 구현됩니다. 이 구성을 **다중 AZ** 라고 합니다. [사전](/modules/prerequisites/) 실습에서 CloudFormation을 사용하여 DB 클러스터를 프로비저닝 했거나, [새 Aurora 클러스터 생성](/modules/create) 실습에 따라 DB 클러스터를 수동으로 생성한 경우 **다중 AZ** Aurora DB 클러스터를 배포한 것입니다.
 
-    In the event of a failure, Amazon Aurora will either restart the database engine within the same DB instance, or promote one of the reader DB instances as the new writer, depending on the circumstances, to restore operations as quickly as possible. It is therefore recommended to use the <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html#Aurora.Overview.Endpoints.Types" target="_blank">relevant DB cluster endpoints</a> to connect to Amazon Aurora, as the role of 'writer' can shift from one DB instance to another in the event of a fault, and the cluster endpoints are always updated to reflect such changes.
-
-    Your client application should not cache the resolved DNS response for these endpoints beyond the specified time-to-live (TTL) - typically 5 seconds, should attempt to reconnect if disconnected, and should always verify whether the connected DB instance has the intended role (writer or reader).
-
-This lab contains the following tasks:
-
-1. Set up failover event notifications
-2. Test a manual DB cluster failover
-3. Test fault injection queries
-4. Test a failover with cluster awareness
-5. Use RDS Proxy to minimize failover disruptions
-6. More testing suggestions
-7. Cleanup lab resources
-
-This lab requires the following prerequisites:
-
-* [Get Started](/prereqs/environment/)
-* [Connect to the Session Manager Workstation](/prereqs/connect/)
-* [Create a New DB Cluster](/provisioned/create/) (conditional, only if you plan to create a cluster manually)
+    장애 발생시 Amazon Aurora는 동일한 DB 인스턴스 내에서 데이터베이스 엔진을 다시 시작하거나 상황에 따라 리더 DB 인스턴스중 하나를 새로운 마서터로 승격하여 작업을 최대한 빨리 복원합니다. 따라서 <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html#Aurora.Overview.Endpoints.Types" target="_blank">관련 DB 클러스터 엔드 포인트</a>를 사용하여 Amazon Aurora에 연결하는 것이 좋습니다. '쓰기' 인스턴스의 역할은 오류 발생시한 DB 인스턴스에서 다른 DB 인스턴스로 이동할 수 있으며 클러스터 엔드 포인트는 항상 이러한 변경 사항을 반영하도록 업데이트됩니다. .
 
 
-## 1. Set up failover event notifications
+    클라이언트 애플리케이션은 지정된 TTL (Time-to-Live) (일반적으로 5 초)을 초과하여 이러한 엔드 포인트에 대해 확인된 DNS 응답을 캐시하지 않아야하며 연결이 끊어진 경우 다시 연결을 시도해야하며 연결된 DB 인스턴스로 예정된 역할이 있는지 항상 확인해야합니다 (쓰기 또는 앍가).
 
-To receive notifications when failover events occur with your DB cluster, you will create an Amazon Simple Notification Service (SNS) topic, subscribe your email address to the SNS topic, create an RDS event subscription publishing events to the SNS topic and registering the DB cluster as an event source.
 
-If you are not already connected to the Session Manager workstation command line, please connect [following these instructions](/prereqs/connect/). Once connected, run:
+이 실습에는 다음 작업이 포함됩니다.
+
+1. 장애 조치 이벤트 알림 설정
+2. 수동 DB 클러스터 장애 조치 테스트
+3. 오류 주입 쿼리 테스트
+4. 클러스터 인식으로 장애 조치 테스트
+5. RDS Proxy를 사용하여 장애 조치 중단 최소화
+6. 더 많은 테스트 제안
+7. 리소스 정리
+
+이 실습에는 다음 전제 조건이 필요합니다.
+
+* [시작](/prereqs/environment/)
+* [Session Manager 워크스테이션에 연결](/prereqs/connect/)
+* [새 DB 클러스터 생성](/provisioned/create/) (클러스터를 수동으로 생성하려는 경우)
+
+
+## 1. 장애 조치 이벤트 알림 설정
+DB 클러스터에서 장애 조치 이벤트가 발생할때 알림을 받으려면 Amazon Simple Notification Service (SNS) 주제를 생성하고, SNS 주제에 이메일 주소를 구독하고, SNS 주제에 이벤트를 게시하는 RDS 이벤트 구독을 생성하고, 이벤트 소스로 DB 클러스터를 등록합니다. 
+
+Session Manager 워크스테이션 명령줄에 아직 연결되어 있지 않은 경우 [다음](/prereqs/connect/) 지침에 따라 연결하십시오. 연결되면 다음을 실행하십시오.
+
 
 ```shell
 aws sns create-topic \
 --name auroralab-cluster-failovers
 ```
 
-If successful, the command will respond back with a **TopicArn** identifier, you will need this value in the next command.
+성공하면 명령이 **TopicArn** 를 응답하며, 다음 명령에서 이 값이 필요합니다.
+
 
 <span class="image">![Create SNS Topic](1-sns-topic.png?raw=true)</span>
 
-Next, subscribe your email address to the SNS topic using the command below, changing the placeholder ==[YourEmail]== with your email address:
+다음으로, ==[YourEmail]== 을 변경하여 아래 명령을 사용하여 SNS 주제에 이메일 주소를 구독하십시오.
+
 
 ```shell
 aws sns subscribe \
@@ -50,11 +54,12 @@ aws sns subscribe \
 --notification-endpoint '[YourEmail]'
 ```
 
-You will receive a verification email on that address, please confirm the subscription by following the instructions in the email.
+해당 주소로 확인 이메일을 받게됩니다. 이메일의 지침에 따라 구독을 확인하십시오.
 
 <span class="image">![Create SNS Topic](1-subscription-verify.png?raw=true)</span>
 
-Once confirmed, or while you are waiting for the verification email to arrive, create an RDS event subscription and register the DB cluster as an event source using the command below:
+확인이 완료되거나 확인 이메일이 도착하기를 기다리는 동안, RDS 이벤트 구독을 생성하고 아래 명령을 사용하여 DB 클러스터를 이벤트 소스로 등록합니다.
+
 
 ```shell
 aws rds create-event-subscription \
@@ -71,263 +76,282 @@ aws rds add-source-identifier-to-subscription \
 
 <span class="image">![RDS Event Subscription](1-rds-event-source.png?raw=true)</span>
 
-At this time the event notifications have been configured. Ensure you have verified your email address before proceeding to the next section.
+이제 이벤트 알림이 구성되었습니다. 다음 섹션으로 진행하기 전에 이메일 주소를 확인했는지 확인하십시오.
 
 
-## 2. Testing a manual DB cluster failover
 
-In this test you will use a [simple failover monitoring script](/scripts/simple_failover.py) to check the status of the database.
+## 2. 수동 DB 클러스터 장애 조치 테스트
 
-??? tip "Learn more about the simple monitoring script"
-    The script is designed to monitor the writer DB instance. It will attempt to connect to the DB cluster's **Cluster Endpoint**, and check the status of the DB instance by executing the following SQL query:
+이 테스트에서는 [간단한 장애 조치 모니터링 스크립트](/scripts/simple_failover.py)를 사용하여 데이터베이스 상태를 확인합니다.
+
+
+??? tip "간단한 모니터링 스크립트에 대해 자세히 알아보기"
+    이 스크립트는 쓰기 DB 인스턴스를 모니터링하도록 설계되었습니다. DB 클러스터의 **클러스터 엔드포인트**에 연결을 시도하고 다음 SQL 쿼리를 실행하여 DB 인스턴스의 상태를 확인합니다.
+
 
     ```
     SELECT @@innodb_read_only, @@aurora_server_id, @@aurora_version;
     ```
 
-    Variable | Expected Value | Description
+    변수 | 값 | 설명
     --- | --- | ---
-    innodb_read_only | `0` for writers, `1` for readers | This global system variable indicates whether the storage engine was opened in read-only mode or not.
-    aurora_server_id | `auroralab-[...]` | This is the value of the DB instance identifier configured for that particular cluster member at creation time
-    aurora_version | e.g. `1.19.5` | This is the version of the Amazon Aurora MySQL database engine running on your DB cluster. Note, these version numbers are different than the MySQL version.
+    innodb_read_only | `0` 쓰기용, `1` 읽기용 | 이 전역 시스템 변수는 스토리지 엔진이 읽기전용 모드로 열렸는지 여부를 나타냅니다.
+    aurora_server_id | `auroralab-[...]` | 생성시 특정 클러스터 멤버에 대해 구성된 DB 인스턴스 식별자의 값입니다.
+    aurora_version | e.g. `1.19.5` | DB 클러스터에서 실행되는 Amazon Aurora MySQL 데이터베이스 엔진의 버전입니다. 이 버전 번호는 MySQL 버전과 다릅니다.
 
     In the event of a fault, the script will report the number of seconds it takes to reconnect to the intended endpoint and the writer role.
+    오류가 발생한 경우 스크립트는 엔드포인트 및 쓰기 역할에 다시 연결하는데 걸리는 수 초가 걸릴 수 있습니다.
 
-You will need to open an additional command line session to your Session Manager workstation. You will execute commands in one, and see the results in the other session. See [Connect to the Session Manager](/prereqs/connect/), for steps how to create a Session Manager command line session. It will also be more effective if the two browser windows are side by side.
 
-In one of the two command line sessions, start the monitoring script using the following command:
+Session Manager 워크스테이션에 대한 추가 명령줄 세션을 열어야합니다. 하나에서 명령을 실행하고 다른 세션에서 결과를 볼 수 있습니다. 세션 관리자 명령줄 세션을 만드는 방법은 [Session Manager에 연결](/prereqs/connect/)을 참조 하십시오. 두 브라우저 창이 나란히있는 경우에도 더 효과적입니다.
+
+두개의 명령줄 세션 중 하나에서 다음 명령을 사용하여 모니터링 스크립트를 시작합니다.
 
 ```shell
 python3 simple_failover.py -e[clusterEndpoint] -u$DBUSER -p"$DBPASS"
 ```
 
-You can quit the monitoring script at any time by pressing `Ctrl+C`.
+`Ctrl+C`를 눌러 언제든지 모니터링 스크립트를 종료할 수 있습니다 .
 
-!!! warning "Cluster Endpoint"
-    Please ensure you use the **Cluster Endpoint** and not a different endpoint for the purposes of this test. If you encounter an error, starting the script, please verify that the endpoint is correct.
+
+!!! warning "클러스터 엔드포인트"
+    이 테스트를 위해 다른 엔드포인트가 아닌 **클러스터 엔드포인트** 를 사용하는지 확인하십시오. 오류가 발생하면 스크립트를 시작하고 엔드포인트가 올바른지 확인하십시오.
+
 
 <span class="image">![Initialize Sessions](2-initialize-sessions.png?raw=true)</span>
 
-In the other command line session, you will trigger a manual failover of the cluster. During this process, Amazon Aurora will promote the reader as the new writer DB instance and demote the old writer to a reader role. The process will take several seconds to complete and will disconnect the monitoring script as well as other database connections. All DB instances in the cluster will be restarted.
+다른 명령줄 세션에서는 클러스터의 수동 장애 조치를 트리거합니다. 이 과정에서 Amazon Aurora는 읽기를 새 쓰기 DB 인스턴스로 승격하고 이전 쓰기를 읽기 역할로 변경합니다. 이 프로세스는 완료하는데 몇 초가 걸리며 모니터링 스크립트와 다른 데이터베이스 연결의 연결을 끊습니다. 클러스터의 모든 DB 인스턴스가 다시 시작됩니다.
 
-Enter the following command in the command line session that does not run the monitoring script:
+모니터링 스크립트를 실행하지 않는 명령줄 세션에 다음 명령을 입력합니다.
 
 ```shell
 aws rds failover-db-cluster \
 --db-cluster-identifier auroralab-mysql-cluster
 ```
 
-Wait and observe the monitor script output. It can take some time for Amazon Aurora to initiate the failover. Once the failover occurs, you should see monitoring output similar to the example below.
+모니터 스크립트의 출력을 기다렸다가 살펴봅니다. Amazon Aurora가 장애 조치를 시작하는데 다소 시간이 걸릴 수 있습니다. 장애 조치가 발생하면 아래 예와 유사한 모니터링 출력이 표시됩니다.
 
 <span class="image">![Trigger DNS Failover](2-dns-failover.png?raw=true)</span>
 
-??? info "Observations"
-    Initially, the Cluster DNS endpoint resolves to the IP address of one of the cluster DB instances (`auroralab-mysql-node-01` in the example above). The monitoring script connects to that particular DB instance and determines it is a writer.
+??? info "관찰"
+    처음에 클러스터 DNS 엔드포인트는 클러스터 DB 인스턴스중 하나의 IP 주소로 확인됩니다.(위 예제의 `auroralab-mysql-node-01`) 모니터링 스크립트는 특정 DB 인스턴스에 연결하여 작성자인지 확인합니다.
 
-    When the actual failover is implemented by the AWS automation, the monitoring script stops being able to connect to the database engine, as both the writer and the reader DB engines are being rebooted and re-configured.
+    실제 장애 조치가 AWS 자동화에 의해 구현되면 쓰기와 읽기기 DB 엔진이 모두 재부팅되고 재구성되므로 모니터링 스크립트가 데이터베이스 엔진에 연결할 수 없게됩니다.
 
-    After several seconds, the monitoring script is able to connect again to the DB engine, but DNS has not fully updated yet, so it still connects to the old writer DB instance, which is now a reader. This underscores the importance of verifying the role of the engine upon establishing connections or borrowing them from a connection pool. The monitoring script correctly detects the discrepancy, and continues attempting to re-connect to the correct endpoint.
+    몇 초 후에 모니터링 스크립트가 DB 엔진에 다시 연결할 수 있지만 DNS가 아직 완전히 업데이트되지 않았으므로 현재는 읽기인 이전 쓰기 DB 인스턴스에 계속 연결됩니다. 이것은 연결을 설정하거나 커넥션 풀에서 사용할 때 엔진의 역할을 확인하는 것의 중요성을 강조합니다. 모니터링 스크립트는 불일치를 올바르게 감지하고 올바른 엔드포인트에 다시 연결을 계속 시도합니다.
 
-    After several additional seconds, the monitoring script is able to connect to the correct new writer DB instance (`auroralab-mysql-node-02` in the example above), after the cluster endpoint has been re-configured automatically to point to the new writer, and DNS TTL has expired client-side. In the example above, the total client side observed failover disruption was ~12 seconds.
+    몇 초가 더 지나면 모니터링 스크립트는 클러스터 엔드포인트가 새 쓰기 인스턴스를 가리키도록 자동으로 재구성되고, DNS TTL이 클라이언트를 만료 한 후 올바른 새 쓰기 DB 인스턴스 (위 예제의 `auroralab-mysql-node-02`)에 연결할 수 있습니다. 위의 예에서 클라이언트 측에서 관찰한 총 장애 조치 중단은 ~ 12 초였습니다.
 
-    In the event of a true hardware failure, you will likely not be able to connect to the old writer instance. But the client may attempt to connect until the attempt times out. A very long `connect_timeout` value in the client MySQL driver configuration may delay recovery for a longer period of time. However, there are other use cases where you would want to initiate a manual failover, such as scaling the compute of writer DB instances with minimal disruption.
+    실제 하드웨어 오류가 발생하면 이전 작성기 인스턴스에 연결할 수 없습니다. 그러나 클라이언트는 시도 시간이 초과 될 때까지 연결을 시도할 수 있습니다. 클라이언트 MySQL 드라이버 구성의 `connect_timeout` 값이 너무 길면 복구가 더 오래 지연될 수 있습니다. 그러나 중단을 최소화하면서 작성기 DB 인스턴스의 컴퓨팅을 확장하는 것과 같이 수동 장애 조치를 시작하려는 다른 사용 사례가 있습니다.
 
-    Because of the nature of DNS resolution and caching, you may also experience a *flip-flop* effect as clients might cycle between the reader and writer for a short span of time following the failover.
+    DNS 확인 및 캐싱의 특성으로 인해 클라이언트가 장애 조치 후 짧은 시간 동안 쓰기와 읽기 사이를 순환 할 수 있으므로 *플립 플롭* 효과를 경험할 수도 있습니다.
 
-Feel free to repeat the failover procedure a few times to determine if there are any significant variances.
 
-You will also receive two event notification emails for each failover you initiate, one indicating that a failover has **started**, and one indicating that it has **completed**.
+장애 조치 절차를 몇 번 반복하여 중요한 차이가 있는지 확인하십시오.
+
+또한 시작한 각 장애 조치에 대해 두 개의 이벤트 알림 이메일을 받게됩니다. 하나는 장애 조치가 **시작** 되었음을 나타내고 다른 하나는 **완료** 되었음을 나타냅니다 .
 
 <span class="image">![SNS Emails](2-notification-emails.png?raw=true)</span>
 
-!!! note
-    The difference between the notification timestamps of the two event notifications may be larger than the actual disruption observed using the monitoring script. The monitoring script measures the actual disruption observed by the client, while the event notification reflects the end-to-end failover process, including subsequent service-side validations once the DB cluster is operational again.
+!!! 주의
+    두 이벤트 알림의 알림 타임 스탬프 간의 차이는 모니터링 스크립트를 사용하여 관찰된 실제 중단보다 클 수 있습니다. 모니터링 스크립트는 클라이언트가 관찰한 실제 중단을 측정하는 반면 이벤트 알림은 DB 클러스터가 다시 작동하면 후속 서비스측 검증을 포함하여 종단간 장애 조치 프로세스를 반영합니다.
 
 
-## 3. Testing fault injection queries
+## 3.  오류 주입 쿼리 테스트
 
-In this test you will simulate a crash of the database engine service on the DB instance. This type of crash can be encountered in real circumstances as a result of out-of-memory conditions, or other unexpected circumstances.
-
-??? tip "Learn more about fault injection queries"
-    <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Managing.FaultInjectionQueries.html" target="_blank">Fault injection queries</a> provide a mechanism to simulate a variety of faults in the operation of the DB cluster. They are used to test the tolerance of client applications to such faults. They can be used to:
-
-    * Simulate crashes of the critical services running on the DB instance. These do not typically result in a failover to a reader, but will result in a restart of the relevant services.
-    * Simulate disk subsystem degradation or congestion, whether transient in nature or more persistent.
-    * Simulate read replica failures
+이 테스트에서는 DB 인스턴스에서 데이터베이스 엔진 서비스의 충돌을 시뮬레이션합니다. 이러한 유형의 충돌은 메모리 부족 상태 또는 기타 예기치 않은 상황으로 인해 실제 상황에서 발생할 수 있습니다.
 
 
-Connect to the cluster endpoint using a MySQL client in the command line session that does not run the monitoring script:
+??? tip "오류 주입 쿼리에 대해 자세히 알아보기""
+    <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Managing.FaultInjectionQueries.html" target="_blank">오류 주입 쿼리</a> 는 DB 클러스터 운영의 다양한 오류를 시뮬레이션하는 메커니즘을 제공합니다. 이러한 오류에 대한 클라이언트 응용 프로그램의 내구성을 테스트하는데 사용됩니다. 다음 용도로 사용할 수 있습니다.
+
+    * DB 인스턴스에서 실행되는 중요한 서비스의 충돌을 시뮬레이션합니다. 일반적으로 읽기에 대한 장애 조치가 발생하지는 않지만 관련 서비스가 다시 시작됩니다.
+    * 본질적으로 일시적이든 더 영구적이든 디스크 하위 시스템 성능 저하 또는 정체를 시뮬레이션합니다.
+    * 읽기 전용 복제본 실패 시뮬레이션
+
+모니터링 스크립트를 실행하지 않는 명령줄 세션에서 MySQL 클라이언트를 사용하여 클러스터 엔드포인트에 연결합니다.
 
 ```shell
 mysql -h[clusterEndpoint] -u$DBUSER -p"$DBPASS" mylab
 ```
 
-Now, issue the following fault injection command:
+이제 다음 오류 주입 명령을 실행하십시오.
 
 ```sql
 ALTER SYSTEM CRASH INSTANCE;
 ```
 
-Wait and observe the monitor script output. Once triggered, you should see monitoring output similar to the example below.
+모니터 스크립트 출력을 기다렸다가 확인하십시오. 트리거되면 아래 예와 유사한 모니터링 출력이 표시됩니다.
 
 <span class="image">![Trigger Fault Injection](3-fault-injection.png?raw=true)</span>
 
-??? info "Observations"
-    When the crash is triggered, the monitoring script stops being able to connect to the database engine.
+??? info "관찰"
+    충돌이 트리거되면 모니터링 스크립트가 데이터베이스 엔진에 연결할 수 없게됩니다.
 
-    After a few seconds the monitoring script is able to connect again to the DB engine.
+    몇 초 후 모니터링 스크립트는 DB 엔진에 다시 연결할 수 있습니다.
 
-    The role of the DB instance has not changed, the writer is still the same DB instance (`auroralab-mysql-node-02` in the example above).
+    DB 인스턴스의 역할은 변경되지 않았으며 작성자는 여전히 동일한 DB 인스턴스입니다.(위의 예에서 `auroralab-mysql-node-02`)
 
-    No DNS changes are needed. As a result the recovery is significantly faster. In the example above, the total client side observed failover disruption was ~2 seconds.
+    DNS 변경이 필요하지 않습니다. 결과적으로 복구가 훨씬 더 빨라집니다. 위의 예에서 클라이언트 측에서 관찰된 총 장애 조치 중단은 ~ 2 초였습니다.
 
-You may need to exit the mysql command console, even if it is disconnected using by typing:
+
+다음을 입력하여 연결이 끊어진 경우에도 mysql 명령 콘솔을 종료해야 할 수 있습니다.
 
 ```sql
 quit;
 ```
 
 
-## 4. Testing a failover with cluster awareness
+## 4. 클러스터 인식으로 장애 조치 테스트
 
-Simple DNS-based failovers work well for most use cases, and they are relatively fast. However, as you have noticed there are still several seconds of connectivity disruption due to DNS update and expiration delays, including the DNS flip-floping effect. Thus failover times can be improved further. In this test you will use a basic [cluster-aware monitoring script](/scripts/aware_failover.py), and compare it side by side with the simple monitoring script used above.
+간단한 DNS 기반 장애 조치는 대부분의 사용 사례에서 잘 작동하며 상대적으로 빠릅니다. 그러나 알고 있듯이 DNS 플립 플로핑 효과를 포함하여 DNS 업데이트 및 만료 지연으로 인해 연결이 여전히 몇 초 동안 중단됩니다. 따라서 장애 조치 시간이 더욱 향상될 수 있습니다. 이 테스트에서는 기본 [클러스터 인식 모니터링 스크립트](/scripts/aware_failover.py)를 사용하고 위에서 사용된 간단한 모니터링 스크립트와 나란히 비교합니다.
 
-??? tip "Learn more about the cluster-aware monitoring script"
-    The script is similar to the simple monitoring script above with a few significant differences:
 
-    * Initially, and after each failure, at re-connect it queries the DB cluster topology to determine the 'new' writer DB instance. The topology is documented in the `information_schema.replica_host_status` table in the database, and accessible from each DB instance.
-    * If the current DB instance is not the writer, it simply reconnects to the DB instance endpoint of the new writer directly.
-    * Upon encountering a new failure, it falls back to using the cluster DNS endpoint again.
+??? tip "클러스터 인식 모니터링 스크립트에 대해 자세히 알아보기"
+    스크립트는 위의 간단한 모니터링 스크립트와 비슷하지만 몇 가지 중요한 차이점이 있습니다.
 
-Assuming you still have the two command line sessions open and active, open a 3rd command line session. See [Connect to the Session Manager](/prereqs/connect/), for steps how to create a Session Manager command line session. It will also be more effective if you put the new browser window side by side with the others.
+    * 처음에는 실패 할 때마다 다시 연결할 때 DB 클러스터 토폴로지를 쿼리하여 '새'쓰기 DB 인스턴스를 결정합니다. 토폴로지는 데이터베이스의 `information_schema.replica_host_status` 테이블에 기록되어 있으며 각 DB 인스턴스에서 액세스 할 수 있습니다.
+    * 현재 DB 인스턴스가 쓰기가 아닌 경우 새 쓰기의 DB 인스턴스 엔드포인트에 직접 다시 연결됩니다.
+    * 새로운 오류가 발생하면 클러스터 DNS 엔드포인트를 다시 사용하도록 대체됩니다.
 
-In the new (third) command line session, start the cluster-aware monitoring script using the following command:
+두 개의 명령줄 세션이 열려 있고 활성화되어 있다고 가정하고 세 번째 명령줄 세션을 엽니다. Session Manager 명령줄 세션을 만드는 방법은 [Session Manager에 연결](/prereqs/connect/)을 참조 하십시오. 새 브라우저 창을 다른 창과 나란히 놓으면 더 효과적입니다.
+
+새(세 번째) 명령줄 세션에서 다음 명령을 사용하여 클러스터 인식 모니터링 스크립트를 시작합니다.
 
 ```shell
 python3 aware_failover.py -e[clusterEndpoint] -u$DBUSER -p"$DBPASS"
 ```
 
-You can quit the monitoring script at any time by pressing `Ctrl+C`.
+`Ctrl+C` 를 눌러 언제든지 모니터링 스크립트를 종료할 수 있습니다.
 
-!!! note
-    Unlike the simple DNS monitoring script from step #2 above, you can even use the reader endpoint to invoke the cluster aware monitoring script. However the cluster endpoint is still recommended.
+!!! 주의
+    위의 2단계의 간단한 DNS 모니터링 스크립트와 달리 읽기 엔드포인트를 사용하여 클러스터 인식 모니터링 스크립트를 호출할 수도 있습니다. 그러나 클러스터 엔드 포인트는 여전히 권장됩니다.
 
-Enter the following command in the command line session that does not run any monitoring script, to trigger the failover:
+모니터링 스크립트를 실행하지 않는 명령줄 세션에 다음 명령을 입력하여 장애 조치를 트리거합니다.
 
 ```shell
 aws rds failover-db-cluster \
 --db-cluster-identifier auroralab-mysql-cluster
 ```
 
-Wait and observe the monitor script output. It can take some time for Amazon Aurora to initiate the failover. Once the failover occurs, you should see monitoring output similar to the example below.
+모니터 스크립트 출력을 기다렸다가 관찰하십시오. Amazon Aurora가 장애 조치를 시작하는데 다소 시간이 걸릴 수 있습니다. 장애 조치가 발생하면 아래 예와 유사한 모니터링 출력이 표시됩니다.
+
 
 <span class="image">![Trigger Aware Failover](4-aware-failover.png?raw=true)</span>
 
-??? info "Observations"
-    When the crash is triggered, the monitoring script stops being able to connect to the database engine
+??? info "관찰""
+    충돌이 트리거되면 모니터링 스크립트가 데이터베이스 엔진에 연결할 수 없게됩니다.
 
-    After a few seconds the monitoring script is able to connect again to the DB engine, detects that the role of the DB instance has changed. It queries the topology of the cluster, discovers the new writer DB instance identifier and computes the DB instance endpoint.
+    몇 초후 모니터링 스크립트는 DB 엔진에 다시 연결할 수 있으며 DB 인스턴스의 역할이 변경되었음을 감지합니다. 클러스터의 토폴로지를 쿼리하고 새 쓰기 DB 인스턴스 식별자를 검색하고 DB 인스턴스 엔드포인트를 계산합니다.
 
-    It disconnects, and reconnects to the new DB writer directly using the DB instance endpoint.
+    연결을 끊었다가 DB 인스턴스 엔드포인트를 사용하여 직접 새 DB 쓰기에 다시 연결합니다.
 
-    In the example above, this process took 4 seconds to restore connectivity compared to 9 seconds when relying exclusively on the cluster DNS endpoint.
+    위의 예에서 이 프로세스는 클러스터 DNS 엔드 포인트에만 의존할 때 9초에 비해 연결을 복원하는 데 4초가 걸렸습니다.
 
-    The initial cluster DNS endpoint is still authoritative and preferred, the cluster-aware monitoring script only uses the DB instance endpoint as long as it works, reverting back to the cluster endpoint when a failure is encountered. This ensures that connectivity is restored as quickly as possible even if there is a total compute failure of the writer DB instance.
-
-Feel free to repeat the failover procedure a few times to determine if there are any significant variances.
-
-As before, you will also receive two event notification emails for each failover you initiate, one indicating that a failover has **started**, and one indicating that it has **completed**.
+    초기 클러스터 DNS 엔드포인트는 여전히 권한이 있고 선호됩니다. 클러스터 인식 모니터링 스크립트는 작동하는 동안만 DB 인스턴스 엔드 포인트를 사용하고 장애가 발생하면 클러스터 엔드포인트로 되돌립니다. 이렇게하면 쓰기 DB 인스턴스의 전체 컴퓨팅 오류가 발생하더라도 가능한 빨리 연결이 복원됩니다.
 
 
-## 5. Using RDS Proxy to minimize failover disruptions
+장애 조치 절차를 몇 번 반복하여 중요한 차이가 있는지 확인하십시오.
 
-In this test you will create an <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/rds-proxy.html" target="_blank">Amazon RDS Proxy</a> for your DB cluster, use the [simple monitoring script](/scripts/simple_failover.py) to connect to it, invoke a manual failover and compare the results with the previous tests that connect directly to the database.
+이전과 마찬가지로 시작한 각 장애 조치에 대해 두 개의 이벤트 알림 이메일을 받게됩니다. 하나는 장애 조치가 **시작** 되었음을 나타내고 다른 하나는 **완료** 되었음을 나타냅니다 .
 
-??? tip "Learn more about Amazon RDS Proxy"
-    Amazon RDS Proxy is a fully managed, highly available database proxy for Amazon Relational Database Service (RDS) that makes applications more scalable, more resilient to database failures, and more secure. RDS Proxy minimizes application disruption from outages affecting the availability of your database, by automatically connecting to a new database instance while preserving application connections. When failovers occur, rather than rely on DNS changes to reroute requests, RDS Proxy routes requests directly to the new database instance.
 
-Open the <a href="https://console.aws.amazon.com/rds/home" target="_blank">Amazon RDS service console</a>.
+## 5. RDS Proxy를 사용하여 장애 조치 중단 최소화
 
-!!! warning "Region Check"
-    Ensure you are still working in the correct region, especially if you are following the links above to open the service console at the right screen.
+이 테스트에서는 DB 클러스터용 <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/rds-proxy.html" target="_blank">Amazon RDS Proxy</a> 를 생성하고, [간단한 모니터링 스크립트](/scripts/simple_failover.py) 를 사용하여 연결하고, 수동 장애 조치를 호출하고, 결과를 데이터베이스에 직접 연결하는 이전 테스트와 비교합니다.
 
-Navigate to **Proxies** in the left side navigation menu. Click **Create proxy**.
+??? tip "Amazon RDS Proxy에 대해 자세히 알아보기"
+    
+    Amazon RDS Proxy는 Amazon Relational Database Service (RDS)를 위한 완전 관리형 고 
+    가용성 데이터베이스 프록시로, 애플리케이션을보다 확장 가능하고 데이터베이스 장애에 대해보다 탄력적이고 안전하게 만들어줍니다. RDS Proxy는 애플리케이션 연결을 유지하면서 새 데이터베이스 인스턴스에 자동으로 연결하여 데이터베이스 가용성에 영향을 미치는 중단으로 인한 애플리케이션 중단을 최소화합니다. 장애 조치가 발생하면 요청을 다시 라우팅하기 위해 DNS 변경에 의존하는 대신 RDS Proxy가 요청을 새 데이터베이스 인스턴스로 직접 라우팅합니다.
+
+
+<a href="https://console.aws.amazon.com/rds/home" target="_blank">Amazon RDS 서비스 콘솔</a> 을 엽니다.
+
+!!! warning "리전 확인"
+    특히 위의 링크를 따라 오른쪽 화면에서 서비스 콘솔을 여는 경우 올바른 지역에서 여전히 작업하고 있는지 확인하십시오.
+
+왼쪽 탐색 메뉴에서 **Proxies** 로 이동 합니다. **프록시 생성**을 클릭합니다 .
 
 <span class="image">![Create Proxy](5-create-proxy.png?raw=true)</span>
 
-In the **Proxy configuration** section, set the Proxy identifier to `auroralab-mysql-proxy`. In the **Target group configuration** section, choose `auroralab-mysql-cluster` in the **Database** dropdown. Leave all other default values as they are.
+**프록시 구성**에서 프록시 식별자를 `auroralab-mysql-proxy`로 설정합니다. **대상 그룹 구성** 섹션 데이터베이스에서 `auroralab-mysql-cluster`를 선택합니다. 다른 모든 기본값은 그대로 둡니다.
 
 <span class="image">![Configure Proxy](5-config-proxy-target.png?raw=true)</span>
 
-In the **Connectivity** section, in the **Secret Manager secret(s)** dropdown, choose the secret with a name that starts with `secretCusterMasterUser`. In the **IAM role** dropdown, choose the option **Create IAM role**. Expand the **Additional connectivity options** section, and for **Existing VPC security groups** choose `auroralab-database-sg`.
+**연결** 섹션의 **Secrets Manager 보안 암호** 에서 `secretCusterMasterUser`로 시작하는 이름을 가진 암호를 선택합니다. **IAM 역할**에서 **IAM 역할 생성**을 선택합니다. **추가 연결 구성**을 확장하고 기존 VPC 보안 그룹에서 `auroralab-database-sg`을 선택합니다.
+
 
 <span class="image">![Configure Proxy Connectivity](5-config-connectivity.png?raw=true)</span>
 
-Click **Create proxy**.
+**프록시 생성**을 클릭합니다.
 
 <span class="image">![Agree Create](5-config-proxy-agree.png?raw=true)</span>
 
 Creating a proxy may take several minutes, you may need to refresh your browser page to view up to date status information. Once the status is listed as **Available**, click on the proxy identifier to view details.
+프록시를 만드는데 몇 분 정도 걸릴 수 있으며 최신 상태 정보를 보려면 브라우저 페이지를 새로 고쳐야 할 수 있습니다. 상태가 **Available** 로 표시되면 프록시 식별자를 클릭하여 세부 정보를 봅니다.
+
+
 
 <span class="image">![Proxy Listing](5-proxy-listing.png?raw=true)</span>
 
-Note down the **Proxy endpoint**, you will use it later.
+아래 **프록시 엔드 포인트**를 적어둡니다. 나중에 실습에서 사용합니다.
 
 <span class="image">![Proxy Details](5-proxy-details.png?raw=true)</span>
 
-Next, you will need two command line sessions open and active (if you still have 3 open from the previous test you may close one by clicking the **Terminate** button in the top right corner). See [Connect to the Session Manager](/prereqs/connect/), for steps how to create a Session Manager command line session. It will also be more effective if you put the two command line browser windows side by side.
+다음으로 두 개의 명령줄 세션이 열려 있고 활성화되어 있어야합니다.(이전 테스트에서 3개가 열려 있는 경우 오른쪽 상단 모서리에있는 **종료** 버튼을 클릭하여 하나를 닫을 수 있습니다). Session Manager 명령 줄 세션을 만드는 방법은 [Session Manager에 연결](/prereqs/connect/)을 참조 하십시오. 또한 두 개의 명령줄 브라우저 창을 나란히 배치하면 더 효과적입니다.
 
-In one of the two command line sessions, start the monitoring script using the following command:
+두 명령줄 세션중 하나에서 다음 명령을 사용하여 모니터링 스크립트를 시작합니다.
 
 ```shell
 python3 simple_failover.py -e[proxy endpoint from above] -u$DBUSER -p"$DBPASS"
 ```
 
-You can quit the monitoring script at any time by pressing `Ctrl+C`.
+`Ctrl+C`를 눌러 언제든지 모니터링 스크립트를 종료할 수 있습니다.
 
-!!! warning "Proxy Endpoint"
-    Please ensure you use the **Proxy Endpoint** from the previous step, not the cluster endpoint used in the previous labs. If you encounter an error, starting the script, please verify that the endpoint is correct.
+
+!!! warning "프록시 엔드포인트"
+    이전 실습에서 사용한 클러스터 엔드포인트가 아니라 이전 단계의 **프록시 엔드포인트**를 사용하고 있는지 확인하십시오. 오류가 발생하면 스크립트를 시작하고 엔드 포인트가 올바른지 확인하십시오.
 
 <span class="image">![Monitor Started](5-monitor-started.png?raw=true)</span>
 
-In the other command line session, you will trigger a manual failover of the cluster.
+다른 명령줄 세션에서는 클러스터의 수동 장애 조치를 트리거합니다.
 
-Enter the following command in the command line session that does not run the monitoring script:
+모니터링 스크립트를 실행하지 않는 명령줄 세션에 다음 명령을 입력합니다.
 
 ```shell
 aws rds failover-db-cluster \
 --db-cluster-identifier auroralab-mysql-cluster
 ```
 
-Wait and observe the monitor script output. It can take some time for Amazon Aurora to initiate the failover. Once the failover occurs, you should see monitoring output similar to the example below.
+모니터 스크립트 출력을 기다렸다가 확인하십시오. Amazon Aurora가 장애 조치를 시작하는데 다소 시간이 걸릴 수 있습니다. 장애 조치가 발생하면 아래 예와 유사한 모니터링 출력이 표시됩니다.
+
 
 <span class="image">![Monitor Failover](5-monitor-failover.png?raw=true)</span>
 
-??? info "Observations"
-    Initially, the proxy sends traffic to the current writer of the DB cluster (`auroralab-mysql-node-01` in the example above). The proxy forwards the monitoring script queries to that particular DB instance.
+??? info "관찰
+    처음에 프록시는 DB 클러스터의 현재 작성자에게 트래픽을 전송합니다.(위의 예의 `auroralab-mysql-node-01`) 프록시는 모니터링 스크립트 쿼리를 특정 DB 인스턴스로 전달합니다.
 
-    When the actual failover is implemented by the AWS automation, the monitoring script experiences a disconnection with MySQL error 1105. One second later, it is able to reconnect again, only this time the proxy is forwarding the queries to the new writer  (`auroralab-mysql-node-02` in the example above). The client experienced ~2 second of latency to the query response.
+    실제 장애 조치가 AWS 자동화에 의해 구현될 때 모니터링 스크립트는 MySQL 오류 1105와 함께 연결 해제를 경험합니다. 1초 후 다시 연결할 수 있습니다. 이번에만 프록시가 새 쓰기(위의 `auroralab-mysql-node-02`)에 쿼리를 전달합니다. 클라이언트는 쿼리 응답에 대해 ~ 2 초의 대기 시간을 경험했습니다.
 
-    The timing of requests issued by the client (our monitoring script in this example) matters. If the query is in-flight at the time the failover starts, or you are attempting to establish a new connection while the failover is ongoing, the proxy will return an error so you can retry. Existing client connections with no in-flight queries will be kept open, and any queries received after the failover starts will be queued up at the proxy until the failover completes. Such clients will simply experience increased response latency for the queries issued during the failover.
+    클라이언트(이 예에서는 모니터링 스크립트)가 발행한 요청의 타이밍이 중요합니다. 장애 조치가 시작될 때 쿼리가 진행 중이거나 장애 조치가 진행되는 동안 새 연결을 설정하려는 경우 프록시가 오류를 반환하므로 다시 시도 할 수 있습니다. 진행중인 쿼리가없는 기존 클라이언트 연결은 열린 상태로 유지되며, 장애 조치가 시작된후 수신된 모든 쿼리는 장애 조치가 완료될 때까지 프록시에서 대기열에 추가됩니다. 이러한 클라이언트는 장애 조치 중에 발행된 쿼리에 대한 응답 대기 시간이 증가합니다.
 
+장애 조치 절차를 몇 번 반복하여 중요한 차이가 있는지 확인하십시오.
 
-Feel free to repeat the failover procedure a few times to determine if there are any significant variances.
-
-You will also receive two event notification emails for each failover you initiate, one indicating that a failover has **started**, and one indicating that it has **completed**.
-
-
-## 6. More testing suggestions
-
-The tests above represent relatively simple failure conditions. Different failure modes may require more advanced testing processes or cluster awareness logic. For more advanced testing, and fault resilience consider the following:
-
-* How would production load at scale affect failure recovery time? Consider testing with the system under load.
-* How would recovery time be affected by the workload condition at the time? Consider testing failure recovery during different workload conditions, eg. a crash during a DDL operation.
-* Can you improve upon the cluster awareness to address other failure modes?
+또한 시작한 각 장애 조치에 대해 두 개의 이벤트 알림 이메일을 받게됩니다. 하나는 장애 조치가 **시작** 되었음을 나타내고 다른 하나는 **완료** 되었음을 나타냅니다 .
 
 
-## 7. Cleanup lab resources
+## 6. 더 많은 테스트 제안
 
-By running this lab, you have created additional AWS resources. We recommend you run the commands below to remove these resources once you have completed this lab, to ensure you do not incur any unwanted charges for using these services.
+위의 테스트는 비교적 간단한 실패 조건을 나타냅니다. 실패 모드에 따라 고급 테스트 프로세스 또는 클러스터 인식 논리가 필요할 수 있습니다. 고급 테스트 및 오류 복구를 위해 다음 사항을 고려하십시오.
+
+* 대규모 프로덕션로드가 장애 복구 시간에 어떤 영향을 미칩니까? 부하가 걸린 시스템으로 테스트 해보십시오.
+* 복구 시간은 당시의 워크로드 조건에 따라 어떤 영향을 받습니까? 다른 작업 부하 조건에서 오류 복구 테스트를 고려하십시오. 예: DDL 작업 중 충돌.
+
+
+## 7. 리소스 정리
+
+이 실습을 실행하여 추가 AWS 리소스를 생성했습니다. 이 실습을 완료한 후 이러한 서비스 사용에 대해 원치 않는 요금이 발생하지 않도록 아래 명령을 실행하여 이러한 리소스를 제거하는 것이 좋습니다.
 
 ```shell
 aws rds remove-source-identifier-from-subscription \
