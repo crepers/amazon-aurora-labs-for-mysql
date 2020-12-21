@@ -1,118 +1,126 @@
-# Set up Database Activity Streams (DAS)
+# 데이터베이스 활동 스트림(Database Activity Streams - DAS) 설정
 
-This lab will show you how to set up and leverage <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/DBActivityStreams.html" target="_blank">Aurora Database Activity Streams (DAS)</a>. Database activity streams provide a near real-time data stream of the database activity in your relational database. When you integrate database activity streams with third-party monitoring tools, you can monitor and audit database activity.
+이 실습에서는 <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/DBActivityStreams.html" target="_blank">Aurora DAS (Database Activity Streams)</a>를 설정하고 활용하는 방법을 보여줍니다. 데이터베이스 활동 스트림은 관계형 데이터베이스에서 데이터베이스 활동의 거의 실시간 데이터 스트림을 제공합니다. 데이터베이스 활동 스트림을 타사 모니터링 도구와 통합하면 데이터베이스 활동을 모니터링하고 감사 할 수 있습니다.
 
-??? tip "Learn more about Database Activity Streams (DAS)"
-    Using Database Activity Streams you can monitor and audit database activity to provide safeguards for your database and help you meet compliance and regulatory requirements. Solutions built on top of Database Activity Streams can protect your database from internal and external threats. The collection, transmission, storage, and processing of database activity is managed outside your database, providing access control independent of your database users and administrators. Your database activity is asynchronously published to an encrypted <a href="https://docs.aws.amazon.com/streams/latest/dev/introduction.html" target="_blank">Amazon Kinesis data stream</a> provisioned on behalf of your Aurora DB cluster.
+??? tip "데이터베이스 활동 스트림 (DAS)에 대해 자세히 알아보기"
+    데이터베이스 활동 스트림을 사용하면 데이터베이스 활동을 모니터링하고 감사하여 데이터베이스를 보호하고 규정 준수 및 규제 요구 사항을 충족할 수 있습니다. 데이터베이스 활동 스트림 위에 구축된 솔루션은 내부 및 외부 위협으로부터 데이터베이스를 보호할 수 있습니다. 데이터베이스 활동의 수집, 전송, 저장 및 처리는 데이터베이스 외부에서 관리되므로 데이터베이스 사용자 및 관리자와는 독립적인 액세스 제어를 제공합니다. 데이터베이스 활동은 Aurora DB 클러스터를 대신하여 암호화된 <a href="https://docs.aws.amazon.com/streams/latest/dev/introduction.html" target="_blank">Amazon Kinesis 데이터 스트림</a>에 비동기로 게시됩니다 .
 
-    Database Activity Streams have the following limits and requirements:
+    데이터베이스 활동 스트림에는 다음과 같은 제한 및 요구 사항이 있습니다.
 
-    1. Currently, DAS is supported only with Aurora MySQL version 2.08.0 or newer, which is compatible with MySQL version 5.7.
-    2. DAS requires use of AWS Key Management Service (AWS KMS) because the activity streams are always encrypted with a customer managed key (CMK).
-
-This lab contains the following tasks:
-
-1. Create an AWS KMS customer managed key (CMK)
-2. Configure Database Activity Streams
-3. Generate database load
-4. Read activity from the stream
-5. Disable Database Activity Streams
-
-This lab requires the following prerequisites:
-
-* [Get Started](/prereqs/environment/)
-* [Connect to the Session Manager Workstation](/prereqs/connect/)
-* [Create a New DB Cluster](/provisioned/create/) (conditional, only if you plan to create a cluster manually)
-* [Connect, Load Data and Auto Scale](/provisioned/interact/) (connectivity and data loading sections only)
+    1. 현재 DAS는 MySQL 버전 5.7과 호환되는 Aurora MySQL 버전 2.08.0 이상에서만 지원됩니다.
+    2. DAS는 활동 스트림이 항상 고객 관리형 키(CMK)로 암호화되기 때문에 AWS Key Management Service(AWS KMS)를 사용해야합니다.
 
 
-## 1. Create an AWS KMS customer managed key (CMK)
+이 실습에는 다음 작업이 포함됩니다.
 
-DAS requires a master key to encrypt the data key, which in turn encrypts the database activity logged (see <a href="https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#enveloping" target="_blank">envelope encryption</a> for more details). The default Amazon RDS master key can’t be used as the master key for DAS. Therefore, you need to create a new AWS KMS customer managed key (CMK) in order to configure the DAS.
+1. AWS KMS 고객 관리형 키(CMK) 생성
+2. 데이터베이스 활동 스트림 구성
+3. 데이터베이스로드 생성
+4. 스트림에서 활동 읽기
+5. 데이터베이스 활동 스트림 비활성화
 
-Open the <a href="https://console.aws.amazon.com/kms/home#/kms/home" target="_blank">AWS Key Management Service (KMS) console</a>. Click **Create a key**.
+이 실습에는 다음 전제 조건이 필요합니다.
+
+* [시작](/prereqs/environment/)
+* [Session Manager 워크스테이션에 연결](/prereqs/connect/)
+* [새 DB 클러스터 생성](/provisioned/create/) (클러스터를 수동으로 생성하려는 경우)
+* [DB 연결, 데이터 로드 및 오토 스케일](/provisioned/interact/) (연결 및 데이터로드 섹션만 해당)
+
+
+## 1. AWS KMS 고객 관리형 키(CMK) 생성
+
+DAS는 데이터 키를 암호화하기 위해 마스터 키가 필요하며, 이는 기록된 데이터베이스 활동을 암호화 합니다 (자세한 내용 은 (see <a href="https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#enveloping" target="_blank">봉투 암호화</a> 참조). 기본 Amazon RDS 마스터 키는 DAS의 마스터 키로 사용할 수 없습니다. 따라서 DAS를 구성하려면 새 AWS KMS 고객 관리형 키(CMK)를 생성해야 합니다.
+
+<a href="https://console.aws.amazon.com/kms/home#/kms/home" target="_blank">AWS Key Management Service (KMS) 콘솔</a>을 엽니다. **키 생성**을 클릭합니다 .
 
 <span class="image">![KMS Home](kms-home.png?raw=true)</span>
 
 On the next screen under **Configure key** choose `Symmetric` for **Key type** and click **Next**.
+아래 다음 화면에서 **키 구성**에서 **대칭**을 선택하고 **다음**을 클릭합니다.
+
 
 <span class="image">![KMS Configure](kms-configure.png?raw=true)</span>
 
 In the **Create alias and description** section:
+**별청 및 설명 생성** 섹션 에서:
 
-* [ ] Set the **Alias** to `auroralab-mysql-das`.
-* [ ] Provide a **Description** such as: `Amazon Aurora lab, CMK for Aurora MySQL Database Activity Streaming (DAS)`.
 
-Then, click **Next**.
+* [ ] **별칭** 을 `auroralab-mysql-das` 로 설정합니다.
+* [ ] 다음 설명에 `Amazon Aurora lab, CMK for Aurora MySQL Database Activity Streaming (DAS)`로 입력합니다.
+
+그런 **다음**을 클릭합니다.
 
 <span class="image">![KMS Labels](kms-labels.png?raw=true)</span>
 
-The following steps depend on the circumstances you are running this lab in. Choose the tab below that best matches your circumstances.
+다음 단계는이 실습을 실행하는 상황에 따라 다릅니다. 아래에서 상황에 가장 적합한 탭을 선택하십시오.
 
-=== "I'm in a workshop using Event Engine"
-    In the **Key administrators** section (you can search for the names to find them quicker):
+=== "Event Engine을 사용하는 워크샵에 있습니다."
+    **키 관리자** 섹션에서(이름으로 검색할 수 있습니다)
 
-    * [ ] Select and check the box next to `TeamRole` and `OpsRole`.
-
-    Click **Next**.
+    * [ ] `TeamRole` 과 `OpsRole` 을 선택하고 확인란을 체크합니다. 
+    
+    **다음**을 클릭합니다.
 
     In the **This account** section (you can search for the names to find them quicker):
 
-    * [ ] Select and check the box next to `TeamRole` and `OpsRole`.
-    * [ ] Select and check the box next to `auroralab-wkstation-[region]` (there may be more than one).
+    **이 계정** 섹션에서(이름으로 검색할 수 있습니다)
 
-=== "I am using my own account"
-    In the **Key administrators** section:
+    * [ ] `TeamRole` 과 `OpsRole` 을 선택하고 확인란을 체크합니다. 
+    * [ ] `auroralab-wkstation-[region]`(둘 이상일 수 있음)옆에있는 확인란 체합니다.
 
-    * [ ] Choose the IAM role or user you are logged in with, or another administrative account you want to administer the key.
+=== "내 계정을 사용하고 있습니다"
+    **키 관리자** 섹션에서
 
-    Click **Next**.
+    * [ ] 로그인한 IAM 역할 또는 사용자 또는 키를 관리할 다른 관리 계정을 선택합니다.
 
-    In the **This account** section:
+    **다음**을 클릭합니다.
 
-    * [ ] Choose the IAM role or user you are logged in with.
-    * [ ] Select and check the box next to `auroralab-wkstation-[region]` (there may be more than one).
+    *이 계정** 섹션에서
 
-Click **Next** to continue.
+    * [ ] 로그인한 IAM 역할 또는 사용자 또는 키를 관리할 다른 관리 계정을 선택합니다.
+    * [ ] `auroralab-wkstation-[region]`(둘 이상일 수 있음)옆에있는 확인란 체합니다.
+
+계속 하려면 **다음** 을 클릭하십시오
+
 
 <span class="image">![KMS Administrators](kms-admins.png?raw=true)</span>
 
-Review the policy for accuracy and click **Finish**.
+정책을 검토하고 **완료** 버튼을 클릭합니다 .
 
 <span class="image">![KMS Review](kms-review.png?raw=true)</span>
 
-Verify the newly created KMS key on the KMS dashboard.
+KMS 대시 보드에서 새로 생성된 KMS 키를 확인합니다.
 
 <span class="image">![KMS Listing](kms-listing.png?raw=true)</span>
 
 
-## 2. Configure Database Activity Streams
+## 2. 데이터베이스 활동 스트림 구성
+클러스터 세부 정보 페이지에서  <a href="https://console.aws.amazon.com/rds/home#database:id=auroralab-mysql-cluster;is-cluster=true" target="_blank">Amazon RDS 서비스 콘솔</a>을 엽니다. 다른 방법으로 RDS 콘솔로 이동한 경우 콘솔의 **데이터베이스** 섹션에서 `auroralab-mysql-cluster`을 클릭합니다.
 
-Open the <a href="https://console.aws.amazon.com/rds/home#database:id=auroralab-mysql-cluster;is-cluster=true" target="_blank">Amazon RDS service console at the cluster details page</a>. If you navigated to the RDS console by other means, click on the `auroralab-mysql-cluster` in the **Databases** section of the console.
-
-From the **Actions** dropdown button, choose **Start activity stream**. The **Database Activity Stream** setup window appears:
+**작업** 버튼 메뉴에서 **활동 스트림 시작**을 선택합니다. **데이터베이스 활동 스트림 설정** 창이 나타납니다.
 
 <span class="image">![RDS Cluster Details](rds-cluster-detail-action.png?raw=true)</span>
 
-Set the **Master key**, to the alias of the symmetric key created in the prior step. Choose **Apply immediately**, then click **Continue**.
+**마스터 키** 를 이전 단계에서 만든 대칭 키의 별칭으로 설정합니다. **즉시 적용**을 선택하고 **계속**을 클릭합니다.
 
 <span class="image">![RDS Enable DAS](rds-das-confirm.png?raw=true)</span>
 
-The **Status** column for the DB cluster will start showing **configuring-activity-stream**. Please wait until the cluster becomes **Available** again. You may need to refresh the browser page to get the latest status.
+DB 클러스터의 **상태** 열에 **configuring-activity-stream**이 표시되기 시작합니다. 클러스터가 다시 **사용 가능** 해질 때까지 기다리십시오. 최신 상태를 얻으려면 브라우저 페이지를 새로 고쳐야 할 수 있습니다.
 
 <span class="image">![RDS Cluster Configuring](rds-cluster-configuring.png?raw=true)</span>
 
-Verify that DAS is enabled by clicking on the cluster named `auroralab-mysql-cluster` and toggle to the **Configuration** tab.
+`auroralab-mysql-cluster` 클러스터를 클릭하고 **구성** 탭으로 전환하여 DAS가 활성화되었는지 확인합니다.
 
 <span class="image">![RDS Cluster Configuration Details](rds-cluster-config-pane.png?raw=true)</span>
 
-Note the **Resource id** and **Kinesis stream** values, you will need these value further in this lab.
+**리소스 ID** 및 **Kinesis 스트림** 값을 적어둡니다. 이후 실습에서 이 값들이 필요합니다.
 
 
-## 3. Generate database load
-You will use a read-only workload to generate load on the DB cluster. This [read load generator script](/scripts/reader_loadtest.py) produces a variety of read queries, using concurrent threads.
+## 3. 데이터베이스로드 생성
 
-If you are not already connected to the Session Manager workstation command line, please connect [following these instructions](/prereqs/connect/). Once connected, run the command below, replacing the ==[clusterEndpoint]== placeholder with the appropriate value from your CloudFormation stack outputs, or Event Engine Team Dashboard if you are participating in an organized workshop.
+읽기 전용 워크로드를 사용하여 DB 클러스터에 부하를 생성합니다. 이 [부하 생성 스크립트](/scripts/reader_loadtest.py)는 동시 스레드를 사용하여 다양한 읽기 쿼리를 생성합니다.
+
+Session Manager 워크 스테이션 명령줄에 아직 연결되어 있지 않은 경우 [다음](/prereqs/connect/) 지침에 따라 연결하십시오. 연결되면 아래 명령을 실행하여 ==[clusterEndpoint]== 를 DB 클러스터의 클러스터 엔드포인트로 입력합니다. CloudFormation 스택 출력 또는 워크숍에 참여하는 경우 Event Engine 팀 대시 보드애서도 엔드포인트를 찾을 수 있습니다.
 
 ```shell
 python3 reader_loadtest.py -e[clusterEndpoint] -u$DBUSER -p"$DBPASS" -dmylab -t2
@@ -120,26 +128,27 @@ python3 reader_loadtest.py -e[clusterEndpoint] -u$DBUSER -p"$DBPASS" -dmylab -t2
 
 <span class="image">![SSM Command](ssm-command-loadtest.png?raw=true)</span>
 
-You can quit the load generator script at any time by pressing `Ctrl+C`.
+`Ctrl+C`를 눌러 언제든지로드 생성기 스크립트를 종료할 수 있습니다.
 
 
-## 4. Read activity from the stream
+## 4. 스트림에서 활동 읽기
 
-You will use an [activity stream consumer script](/scripts/das_reader.py) to read the events from the activity stream and print them on the command line. 
+[활동 스트림 소비자 스크립트](/scripts/das_reader.py) 를 사용하여 활동 스트림에서 이벤트를 읽고 명령줄에 표시합니다.
 
-You will need to open an additional command line session to your Session Manager workstation, to see the activity events produced by the load generator you are running in the other session. See [Connect to the Session Manager](/prereqs/connect/), for steps how to create a new Session Manager command line session (if you don't already have one active from previous labs). Execute the command below in this new session, replacing the ==[resourceId]== and ==[streamName]== placeholders with the appropriate **Resource ID** and **Stream Name** values you retrieved above, after the activity stream was enabled.
+다른 세션에서 실행중인 부하 생성기에 의해 생성된 활동 이벤트를 보려면 세션 관리자 워크 스테이션에 대한 추가 명령줄 세션을 열어야합니다. 새 세션 관리자 명령줄 세션을 만드는 방법은 [Session Manager에 연결](/prereqs/connect/)을 참조하세요.(이전 실습에서 아직 활성 세션이 없는 경우) 활동 스트림이 활성화 된 후 위에서 확인한 **리소스 ID** 및 **스트림 이름** 값을 ==[resourceId]== 와 ==[streamName]== 에 입력하고 새 세션에서 아래 명령을 실행합니다.
 
 ```shell
 python3 das_reader.py -i [resourceId] -s [streamName]
 ```
 
-You can quit the monitoring script at any time by pressing `Ctrl+C`.
+`Ctrl+C`를 눌러 언제든지 모니터링 스크립트를 종료할 수 있습니다.
 
-For a better look at an event, you can use a tool, such as <a href="https://jsonformatter.org/" target="_blank">jsonformatter.org</a>, to format the JSON structure to be more readable.
+
+이벤트를 더 잘 보려면 <a href="https://jsonformatter.org/" target="_blank">jsonformatter.org</a> 와 같은 사이트를 이용하여 JSON 구조를 더 읽기 쉽게 확인 할 수 있습니다.
 
 <span class="image">![Formatted Output](das-formatted-output.png?raw=true)</span>
 
-Your output should look similar to the following example:
+결과는 다음 예제와 유사해야 합니다.
 
 ```json
 {
@@ -176,16 +185,16 @@ Your output should look similar to the following example:
 ```
 
 
-## 5. Disable Database Activity Streams
+## 5. 데이터베이스 활동 스트림 비활성화
 
-Open the <a href="https://console.aws.amazon.com/rds/home?#database:id=auroralab-mysql-cluster;is-cluster=true" target="_blank">Amazon RDS service console at the cluster details page</a>, if not already open. If the cluster is not already selected, choose **Databases** and click on the DB identifier with the cluster named `auroralab-mysql-cluster`.
+Amazon RDS 서비스 콘솔을 아직 열려있지 않은경우 <a href="https://console.aws.amazon.com/rds/home?#database:id=auroralab-mysql-cluster;is-cluster=true" target="_blank">Amazon RDS 서비스 콘솔</a>을 엽니다. 클러스터가 아직 선택되지 않은경우 데이터베이스를 선택하고 `auroralab-mysql-cluster`클러스터가 있는 DB를 클릭합니다.
 
-Click on the **Actions** dropdown, and select **Stop activity stream**.
+**작업**의 드롭 다운 메뉴에서 **활동 스트림 중지**를 선택합니다.
 
 <span class="image">![RDS Cluster Stop](rds-cluster-action-stop.png?raw=true)</span>
 
-On the setup screen choose **Apply immediately** and click **Continue**. 
+설정 화면에서 **즉시 적용**을 선택하고 **계속**을 클릭합니다.
 
 <span class="image">![RDS DAS Stop](rds-das-stop.png?raw=true)</span>
 
-The status column on the RDS Database home page for the cluster will start showing `configuring-activity-stream`. The operation wil lbe complete when the DB cluster and its DB instances show a status of `Available`.
+클러스터에 대한 RDS 데이터베이스 홈 페이지의 상태 열이 `configuring-activity-stream` 로 표시되기 시작합니다. DB 클러스터 및 DB 인스턴스가 상태가 `사용 가능` 으로 표시되면 작업이 완료된 것입니다.

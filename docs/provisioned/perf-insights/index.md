@@ -33,7 +33,7 @@ Session Manager 워크 스테이션 명령 줄에 아직 연결되어 있지 않
 
 
 === "직접 DB 클러스터를 생성했습니다."
-    [새 DB 클러스터 생성](/provisioned/create/) 실습을 완료하고 Aurora DB 클러스터를 수동으로 생성한 경우 아래 명령을 수동으로 실행하여 ==[ec2Instance]== 에 값을 입력하세요. CloudFormation 스택 출력에도 값이 있으며, 공식 워크숍에 참여하는 경우 Event Engine 팀 대시 보드에서도 확인이 가능하니다. 또한 ==[clusterEndpoint]== 를 DB 클러스터의 클러스터 엔드 포인트가로 입력합니다.
+    [새 DB 클러스터 생성](/provisioned/create/) 실습을 완료하고 Aurora DB 클러스터를 수동으로 생성한 경우 아래 명령을 수동으로 실행하여 ==[ec2Instance]== 에 값을 입력하세요. CloudFormation 스택 출력에도 값이 있으며, 공식 워크숍에 참여하는 경우 Event Engine 팀 대시 보드에서도 확인이 가능하니다. 또한 ==[clusterEndpoint]== 를 DB 클러스터의 클러스터 엔드 포인트로 입력합니다.
 
 
         aws ssm send-command \
