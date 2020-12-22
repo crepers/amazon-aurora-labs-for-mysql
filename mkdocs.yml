@@ -64,7 +64,7 @@ markdown_extensions:
 nav:
   - 홈: 'index.md'
   - 필수 구성 요소:
-    - 랩 시작: 'prereqs/environment/index.md'
+    - 시작: 'prereqs/environment/index.md'
     - Session Manager를 이용하여 워크 스테이션에 연결: 'prereqs/connect/index.md'
   - 프로비저닝:
     - DB 클러스터 생성: 'provisioned/create/index.md'

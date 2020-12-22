@@ -1,96 +1,117 @@
-# Get Started Using the Lab Environment
+# 랩 환경을 사용하여 시작하기
 
-Before you can use the resources in the lab environment, you need to complete a few steps.
 
-If you are attending a formal event, such as a workshop or other training, your instructor will provide specific guidance on how to start. Typically you will be provided an AWS account through a platform called **Event Engine**, and the lab environment has already been deployed in that account for you. Choose the **I'm in a workshop using Event Engine** tab below (already preselected below).
+랩 환경에서 리소스를 사용하려면 몇 단계를 완료해야합니다.
 
-If you are trying these labs out yourself, in your own account, or you are attending a formal event and your instructor has specifically instructed you to deploy the lab environment manually, choose the  **I need to deploy lab environment manually** tab below.
+워크샵이나 기타 교육과 같은 공식 행사에 참석하는 경우 강사가 시작 방법에 대한 구체적인 지침을 제공합니다. 일반적으로 **Event Engine** 이라는 플랫폼을 통해 AWS 계정이 제공되며 실습 환경은 이미 해당 계정에 배포되어 있습니다. **Event Engine 사용 워크샵**인 경우 아래 탭을 선택합니다.
 
-Please select the option that matches your circumstances best:
+이 실습을 자신의 계정으로 직접 시도하거나 공식 이벤트에 참석하고 강사가 실습 환경을 수동으로 배포하도록 특별히 지시한 경우 아래에서 **실습 환경을 수동으로 배포해야 함** 탭을 선택하십시오.
 
-=== "I'm in a workshop using Event Engine"
-    <h4>Sign into Event Engine</h4>
+상황에 가장 적합한 옵션을 선택하십시오.
 
-    At the beginning of the workshop you have been provided with a **12-character access code**. This access code grants you permission to use a dedicated AWS account for the purposes of this workshop.
 
-    Go to <a href="https://dashboard.eventengine.run/" target="_blank">**https://dashboard.eventengine.run/**</a>, enter the access code and click **Proceed**.
+=== "Event Engine을 사용하는 워크샵에 있습니다."
+    <h4>이벤트 엔진에 로그인</h4>
+
+    워크숍 시작시 **12자리 액세스 코드**가 제공되었습니다. 이 액세스 코드는 이 워크샵의 목적으로 전용 AWS 계정을 사용할 수 있는 권한을 부여합니다.
+
+    <a href="https://dashboard.eventengine.run/" target="_blank">**https://dashboard.eventengine.run/**</a>로 이동하여 액세스 코드를 입력하고 **진행**을 클릭합니다.
+
 
     <span class="image">![EventEngine Login](1-ee-login.png?raw=true)</span>
 
-    On the **Team Dashboard**, please click **AWS Console** to log into the AWS Management Console.
+    **Team Dashboard** 에서 **AWS Console**을 클릭하십시오. AWS 관리 콘솔에 로그인 할 수 있습니다.
 
     <span class="image">![EventEngine Dashboard](1-ee-dashboard.png?raw=true)</span>
 
-    Click **Open Console**. For the purposes of this workshop, you will not need to use command line and API access credentials.
+    **Open Console**을 클릭합니다. 이 워크샵에서는 명령줄 및 API 액세스 자격 증명을 사용할 필요가 없습니다.
 
     <span class="image">![EventEngine Open Console](1-ee-open-console.png?raw=true)</span>
 
-    <h4>Get the environment parameters</h4>
+    <h4>실습환경 Parameters 가져오기</h4>
 
     Back on the **Team Dashboard** web page (browser tab), close the **AWS Console Login** modal window (shown above) using the `x` in the top right corner, or the **OK** button, and scroll down.
+    **Team Dashboard** 웹 페이지(브라우저 탭)로 돌아가서 **AWS Console Login** 오른쪽 상단 모서리에 있는 `x`를 사용하여 AWS 콘솔 로그인 모달 창 (위에 표시됨)을 닫거나 **OK** 버튼을 누르고 아래로 스크롤 합니다.
 
-    You will see a set of parameters that you will need during the labs. The names that appear in the **Parameter** column here, are referenced directly in the instructions in subsequent labs, using the parameter format: ==[parameter]==. Replace the parameters with the corresponding values from here where indicated in subsequent labs.
+    실습중에 필요한 매개 변수 세트가 표시됩니다. 여기서 **Parameter**에 나타나는 이름은 매개 변수 형식을 사용하여 후속 실습에서 직접 참조됩니다. Parameter를 후속 실습에 표시된 ==[parameters]== 에서 해당 값으로 바꿉니다.
 
     <span class="image">![Stack Outputs](1-ee-outputs.png?raw=true)</span>
 
-    Once you have completed these steps, you can continue with the next lab: [**Connect to the Session Manager workstation**](/prereqs/connect/)
+    이 단계를 완료하면 다음 실습을 계속할 수 있습니다. [**Session Manager 워크스테이션에 연결**](/prereqs/connect/)
 
 
-=== "I need to deploy lab environment manually"
-    <h4>Access the AWS Management Console</h4>
+=== "랩 환경을 수동으로 배포해야 합니다."
+    <h4>AWS Management Console에 연결</h4>
 
-    If you are running these labs in a formal, instructional setting, please use the Console URL, and credentials provided to you to access and log into the AWS Management Console. Otherwise, please use your own credentials. You can access the console at: <a href="https://console.aws.amazon.com/" target="_blank">https://console.aws.amazon.com/</a> or through the Single Sign-On (SSO) mechanism provided by your organization.
+    공식적인 교육 설정에서 이러한 실습을 실행하는 경우 콘솔 URL과 제공된 자격 증명을 사용하여 AWS Management Console에 연결하고 로그인하십시오. 그렇지 않으면 자신의 자격 증명을 사용하십시오. <a href="https://console.aws.amazon.com/" target="_blank">https://console.aws.amazon.com/</a>에서 또는 회사에서 제공하는 SSO(Single Sign-On) 메커니즘을 통해 콘솔에 액세스할 수 있습니다.
+
+
 
     <span class="image">![AWS Management Console Login](2-login.png?raw=true)</span>
 
-    If you are running these labs in a formal, instructional setting, **please use the AWS region provided**. Ensure the correct AWS region is selected in the top right corner, if not use that dropdown to choose the correct region. The labs are designed to work in any of the regions where Amazon Aurora MySQL compatible is available. However, not all features and capabilities of Amazon Aurora may be available in all supported regions at this time.
+    공식적인 교육에서 이러한 실습을 실행하는 경우 **제공된 AWS 리전을 사용하십시오.** 올바른 리전을 선택하지 않는 경우 오른쪽 상단 모서리에서 올바른 AWS 리전이 선택되었는지 확인합니다. 실습은 Amazon Aurora MySQL과 호환되는 모든 리전에서 작동하도록 설계되었습니다. 그러나 현재 Amazon Aurora의 모든 기능을 지원되는 모든 리전에서 사용할 수 있는 것은 아닙니다.
 
-    !!! warning "Region for Global Database Labs"
-        If you plan to run the **Aurora Global Database** labs, please select a region that is **different from US East (N. Virginia) / us-east-1**. You will use this region for the secondary region for those labs, and the primary and secondary regions for Global Database need to be different.
+
+
+    !!! warning "글로벌 데이터베이스 실습을 위한 지역"
+        **Aurora 글로벌 데이터베이스** 실습을 실행하려는 경우 **미국 동부(버지니아 북부)/us-east-1**과 다른 리전을 선택하십시오. 이 지역은 해당 실습의 보조 지역으로 사용되며 글로벌 데이터베이스의 기본 및 보조 지역은 달라야합니다.
+
 
     <span class="image">![AWS Management Console Region Selection](2-region-select.png?raw=true)</span>
 
-    <h4>Deploy the lab environment using AWS CloudFormation</h4>
+    <h4>AWS CloudFormation을 사용하여 실습 환경 배포</h4>
 
-    To simplify the getting started experience with the labs, we have created foundational templates for <a href="https://aws.amazon.com/cloudformation/" target="_blank">AWS CloudFormation</a> that provision the resources needed for the lab environment. These templates are designed to deploy a consistent networking infrastructure, and client-side experience of software packages and components used in the lab.
+    실습 시작 경험을 단순화하기 위해 실습 환경에 필요한 리소스를 프로비저닝하는 <a href="https://aws.amazon.com/cloudformation/" target="_blank">AWS CloudFormation</a>용 기본 템플릿을 만들었습니다. 이러한 템플릿은 일관된 네트워킹 인프라와 랩에서 사용되는 소프트웨어 패키지 및 구성 요소의 클라이언트측 환경을 배포하도록 설계되었습니다.
 
-    Please choose the most appropriate CloudFormation template based on the labs you want to run, and click **Launch Stack**:
+    실행하려는 실습에 따라 가장 적합한 CloudFormation 템플릿을 선택하고 **스택 생성**을 클릭하십시오.
 
-    Option | One-Click Launch
+    Option | One-Click 시작
     --- | ---
-    **I will create the DB cluster manually** | <a href="https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=auroralab&templateURL=https://s3.amazonaws.com/[[bucket]]/templates/lab_template.yml&param_deployCluster=No" target="_blank"><img src="/assets/images/cloudformation-launch-stack.png" alt="Launch Stack"></a>
-    **Create an Aurora Provisioned DB cluster for me automatically** | <a href="https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=auroralab&templateURL=https://s3.amazonaws.com/[[bucket]]/templates/lab_template.yml&param_deployCluster=Yes" target="_blank"><img src="/assets/images/cloudformation-launch-stack.png" alt="Launch Stack"></a>
+    **DB 클러스터를 수동으로 생성하겠습니다.** | <a href="https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=auroralab&templateURL=https://s3.amazonaws.com/[[bucket]]/templates/lab_template.yml&param_deployCluster=No" target="_blank"><img src="/assets/images/cloudformation-launch-stack.png" alt="Launch Stack"></a>
+    **자동으로 Aurora 프로비저닝된 DB 클러스터 생성** | <a href="https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=auroralab&templateURL=https://s3.amazonaws.com/[[bucket]]/templates/lab_template.yml&param_deployCluster=Yes" target="_blank"><img src="/assets/images/cloudformation-launch-stack.png" alt="Launch Stack"></a>
 
-    ??? tip "Can I see the CloudFormation template?"
-        Yes, we encourage you to download the CloudFormation template, review the resources that are being created and how they are configured.
+    ??? tip "CloudFormation 템플릿을 볼 수 있습니까?""
+        예, CloudFormation 템플릿을 다운로드하고 생성중인 리소스 및 구성 방법을 검토하는 것이 좋습니다.
 
-        [Download the CloudFormation template](https://[[website]]/templates/lab_template.yml)
+        [CloudFormation 템플릿 다운로드](https://[[website]]/templates/lab_template.yml)
 
-    !!! warning "Region Check"
-        Ensure you are still working in the correct region, especially if you are following the links above to open the service console at the right screen. Also note, the region should not be US East (N. Virginia) / us-east-1, if you are planning to run the Aurora Global Databsase labs.
 
-    In the field named **Stack Name**, ensure the value `auroralab` is preset. For the **Use AZs** parameter (Regional Settings section) select 3 availability zones (AZs) from the dropdown. If your desired region only supports 2 AZs, please select just the two AZs available.
 
-    If you are planning to run the Aurora Machine Learning integration labs, please also select **Yes** for the **Enable Aurora ML Labs?** parameter (Lab Features section).
+    !!! warning "리전 확인"
+        특히 위의 링크를 따라 오른쪽 화면에서 서비스 콘솔을 여는 경우 올바른 지역에서 여전히 작업하고 있는지 확인하십시오. 또한 Aurora Global Databsase 실습을 실행하려는 경우 리전은 미국 동부 (버지니아 북부)/us-east-1이 아니어야 합니다.
+
+
+    **스택 이름** 필드에서 값 `auroralab`이 설정되어 있는지 확인하십시오. 
+
+    Aurora 글로벌 데이터베이스 실습을 실행할 계획이라면 **Enable Aurora Global Database Labs?**에서 **Yes** 를 선택하십시오.
+
+    Aurora 기계학습 통합 실습을 실행할 계획이라면 **Enable Aurora ML Labs?** 에서 **Yes** 를 선택하십시오.
 
     <span class="image">![Create Stack](2-create-stack-params.png?raw=true)</span>
 
-    Scroll to the bottom of the page, check the box that reads: **I acknowledge that AWS CloudFormation might create IAM resources with custom names** and then click **Create stack**.
+    페이지 하단으로 스크롤하여 다음 확인란을 선택합니다. **AWS CloudFormation에서 사용자 지정 이름으로 IAM 리소스를 생성할 수 있음을 승인합니다.** 체크하고 **스택 생성**을 클릭합니다.
+
 
     <span class="image">![Create Stack](2-create-stack-confirm.png?raw=true)</span>
 
-    The stack will take approximatively 20 minutes to provision, you can monitor the status on the **Stack detail** page. You can monitor the progress of the stack creation process by refreshing the **Events** tab. The latest event in the list will indicate `CREATE_COMPLETE` for the stack resource.
+    스택을 프로비저닝하는데 약 20분이 소요되며 **스택 세부정보** 페이지에서 상태를 모니터링 할 수 있습니다. **이벤트** 탭을 새로고쳐 스택 생성 프로세스의 진행 상황을 모니터링할 수 있습니다. 목록의 최신 이벤트는 스택 리소스에 대한`CREATE_COMPLETE`를 나타냅니다.
+
+
 
     <span class="image">![Stack Status](2-stack-status.png?raw=true)</span>
 
-    Once the status of the stack is `CREATE_COMPLETE`, click on the **Outputs** tab. The values here will be critical to the completion of the remainder of the lab.  Please take a moment to save these values somewhere you will have easy access to them during the remainder of the lab. The names that appear in the **Key** column are referenced directly in the instructions in subsequent steps, using the parameter format: ==[outputKey]==
+
+    스택 상태가 `CREATE_COMPLETE`이면 **출력** 탭을 클릭합니다. 여기에있는 값은 나머지 실습을 완료하는데 중요합니다. 잠시 시간을내어 이 값을 나머지 실습 중에 쉽게 액세스 할 수있는 위치에 저장하십시오. **키** 열에 나타나는 이름은 매개 변수 형식을 사용하여 후속 단계의 지침에서 직접 참조됩니다. ==[outputKey]==
+
 
     <span class="image">![Stack Outputs](2-stack-outputs.png?raw=true)</span>
 
-    <h4>Verify lab environment</h4>
+    <h4>실습환경 확인</h4>
 
-    Let's make sure your workstation has been configured properly:
 
-    * Do you see a value similar to `i-0123456789abcdef0` (the value may vary) for the **bastionInstance** CloudFormation stack output key?
+    워크스테이션이 올바르게 구성되었는지 확인하십시오.
 
-    If so, you may proceed to the next lab: [**Connect to the Session Manager workstation**](/prereqs/connect/). Otherwise please revisit the instructions above, you might have missed a step.
+    * bastionInstance CloudFormation 스택 출력 키에 `i-0123456789abcdef0`와 비슷한 값(값은 다를 수 있음)이 표시 됩니까?
+
+    그렇다면 다음 실습으로 진행할 수 있습니다. [**Session Manager 워크스테이션에 연결**](/prereqs/connect/). 그렇지 않으면 위의 지침을 다시 확인하십시오. 단계를 놓쳤을 수 있습니다.
+
