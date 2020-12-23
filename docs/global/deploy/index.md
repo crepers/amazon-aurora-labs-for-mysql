@@ -1,131 +1,157 @@
-# Deploy an Aurora Global Database
+# Aurora 글로벌 데이터베이스 배포
 
-Amazon Aurora <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html" target="_blank">Global Database</a> is designed for globally distributed applications, allowing a single Amazon Aurora database to span multiple AWS regions. It replicates your data with no impact on database performance, enables fast local reads with low latency in each region, and provides disaster recovery from region-wide outages.
+<a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html" target="_blank">Amazon Aurora 글로벌 데이터베이스</a> 는 전 세계적으로 분 된 애플리케이션용으로 설계되어 단일 Amazon Aurora 데이터베이스가 여러 AWS 리전에 걸쳐있을 수 있습니다. 데이터베이스 성능에 영향을 주지않고 데이터를 복제하고, 각 지역에서 짧은 지연 시간으로 빠른 로컬 읽기를 가능하게하며, 지역 전체 중단으로부터 재해 복구를 제공합니다.
 
-This lab contains the following tasks:
+이 실습에는 다음 작업이 포함됩니다.
 
-1. Create a lab environment in a different region
-2. Create an Aurora global cluster
+1. 다른 지역에 실습 환경 만들기
+2. Aurora 글로벌 클러스터 생성
 
-This lab requires the following prerequisites:
+이 실습에는 다음 전제 조건이 필요합니다.
 
-* [Get Started](/prereqs/environment/) (choose the **Deploy Global DB** option)
-* [Create a New DB Cluster](/provisioned/create/) (conditional, only if you plan to create a cluster manually)
+* [시작](/prereqs/environment/)(**Deploy Global DB** 옵션 선택)
+* [새 DB 클러스터 생성](/provisioned/create/) (클러스터를 수동으로 생성하려는 경우에만)
 
 
-## 1. Create a lab environment in a different region
+## 1. 다른 리전에 실습 환경 만들기
 
-!!! warning "Using Multiple Regions"
-    Due to the **multi-region** nature of a Global Database, you will often be switching between two regions to accomplish the tasks in this lab. **Please be mindful** that you are performing the actions in the proper region, as some of the resources created are very similar between the two regions.
+!!! warning "여러 리전 사용"
+    글로벌 데이터베이스의 **다중 리전** 특성으로 인해 이 실습의 작업을 수행하기 위해 두 지역간에 전환하는 경우가 많습니다. 생성된 리소스 중 일부는 두 리전간에 매우 유사하므로 적절한 리전에서 작업을 수행하고 있다는 점에 **유의하십시오.**
 
-    We will refer to the region where your current DB cluster is deployed, and you have been working in so far, as your **primary region**. 
+    현재 DB 클러스터가 배포되고 지금까지 작업한 리전을 **기본 리전**이라고 합니다.
 
-    We will refer to the region where you will deploy the secondary, read-only DB cluster as the **secondary region**.
+    보조, 읽기 전용 DB 클러스터를 배포할 리전을 **보조 리전**이라고 합니다.
 
-To simplify the getting started experience with the labs, we have created foundational templates for <a href="https://aws.amazon.com/cloudformation/" target="_blank">AWS CloudFormation</a> that provision the resources needed for the lab environment. These templates are designed to deploy a consistent networking infrastructure, and client-side experience of software packages and components used in the lab.
+실습 시작을 단순화하기 위해 실습 환경에 필요한 리소스를 프로비저닝하는  <a href="https://aws.amazon.com/cloudformation/" target="_blank">AWS CloudFormation</a>용 기본 템플릿을 만들었습니다. 이러한 템플릿은 일관된 네트워킹 인프라와 실습에서 사용되는 소프트웨어 패키지 및 구성 요소의 클라이언트측 환경을 배포하도록 설계되었습니다.
 
-Click **Launch Stack** below to provision a lab environment in the **US East (N Virginia, us-east-1)** region to support the Aurora Global Database.
+Aurora 글로벌 데이터베이스를 지원하기 위해 **미국 동부(버지니아 북부, us-east-1)** 리전에서 실습 환경을 프로비저닝 하려면 아래 **스택 생성**을 클릭하십시오 .
 
 <a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?stackName=auroralab&templateURL=https://s3.amazonaws.com/[[bucket]]/templates/lab_template.yml&param_deployCluster=No&param_deployML=No&param_deployGDB=Yes&param_isSecondary=Yes" target="_blank"><img src="/assets/images/cloudformation-launch-stack.png" alt="Launch Stack"></a>
 
-In the field named **Stack Name**, ensure the value `auroralab` is preset. Accept all default values for the remaining parameters.
+**스택 이름** 필드에서 값이 `auroralab`으로 설정되어 있는지 확인하십시오. 나머지 매개 변수에 대해 모든 기본값을 사용하십시오.
 
-Scroll to the bottom of the page, check the box that reads: **I acknowledge that AWS CloudFormation might create IAM resources with custom names** and then click **Create stack**.
+페이지 하단으로 스크롤하여 다음 확인란을 선택합니다. `AWS CloudFormation에서 사용자 지정 이름으로 IAM 리소스를 생성할 수 있음을 승인합니다`를 확인한 다음 **스택 생성** 을 클릭 합니다.
 
 <span class="image">![Create Stack](cfn-create-stack-confirm.png?raw=true)</span>
 
-The stack will take approximatively 10 minutes to provision, you can monitor the status on the **Stack detail** page. You can monitor the progress of the stack creation process by refreshing the **Events** tab. The latest event in the list will indicate `CREATE_COMPLETE` for the stack resource.
+스택을 프로비저닝하는데 약 10분이 소요되며 **스택 세부 정보** 페이지에서 상태를 모니터링 할 수 있습니다. **이벤트 탭** 을 새로고쳐 스택 생성 프로세스의 진행 상황을 모니터링 할 수 있습니다. 목록의 최신 이벤트 `CREATE_COMPLETE`는 스택 리소스를 나타냅니다.
+
 
 <span class="image">![Stack Status](cfn-stack-status.png?raw=true)</span>
 
-Once the status of the stack is `CREATE_COMPLETE`, click on the **Outputs** tab. The values here will be critical to the completion of the remainder of the lab.  Please take a moment to save these values somewhere that you will have easy access to them during the remainder of the lab. The names that appear in the **Key** column are referenced directly in the instructions in subsequent steps, using the parameter format: ==[outputKey]==.
+스택 상태가 `CREATE_COMPLETE`이면 **출력** 탭을 클릭합니다. 여기에있는 값은 나머지 실습을 완료하는데 중요합니다. 나머지 실습 동안 쉽게 액세스할 수 있도록 이 값들을 저장하십시오. **키** 열에 나타나는 이름은 매개 변수 형식을 사용하여 후속 단계의 지침에서 직접 참조됩니다. ==[outputKey]==
+
 
 <span class="image">![Stack Outputs](cfn-stack-outputs.png?raw=true)</span>
 
 
-## 2. Create an Aurora global cluster
+## 2. Aurora 글로벌 클러스터 생성
 
-The lab environment that was provisioned automatically for you, already has an Aurora MySQL DB cluster, that you are running the load generator against. You will create a Global Database cluster using this existing DB cluster, as the **primary**.
+자동으로 프로비저닝된 실습 환경에는 부하 생성기를 실행중인 Aurora MySQL DB 클러스터가 이미 있습니다. 이 기존 DB 클러스터를 **기본** 으로 사용하여 글로벌 데이터베이스 클러스터를 생성합니다.
 
-???+ info "'Global cluster' vs. 'DB cluster': What is the difference?"
-    A **DB cluster** exists in one region only. It is a container for up to 16 **DB instances** that share the same storage volume. This is the traditional configuration of an Aurora cluster. Whether you are deploying a provisioned, Serverless or Multi-Master cluster, you are deploying a **DB cluster**, within a single region.
 
-    A **Global [database] cluster** is a container for several **DB clusters** each located in a different region, that act as a cohesive database. A **global cluster** is comprised of a **primary [DB] cluster** in one given region that is able to accept writes, and up to 5 **secondary [DB] clusters** that are read-only each in a different region. Each one of the **DB clusters** in a given **global cluster** have their own storage volume, however data is replicated from the **primary cluster** to each of the **secondary clusters** asynchronously, using a purpose-built low latency and high throughput replication system.  
+???+ info "'글로벌 클러스터' vs. 'DB 클러스터': 차이점은 무엇입니까?"
+    **DB 클러스터**는 한 리전에서만 존재합니다. 동일한 스토리지 볼륨을 공유하는 최대 16개의 **DB 인스턴스**를 위한 컨테이너입니다. 이것은 Aurora 클러스터의 기존 구성입니다. 프로비저닝된 클러스터, 서버리스 또는 다중 마스터 클러스터 배포 여부에 관계없이 단일 리전내에 **DB 클러스터**를 배포합니다 .
 
-Once the lab environment created above at **Step 1. Create a lab environment in a different region** has finished deploying, you may proceed.
+    **글로벌 [데이터베이스] 클러스터**가 여러 가지에 대한 컨테이너이고 **DB 클러스터** 의 다른 영역에있는 각각의 응집력 데이터베이스와 해당 법. **글로벌 클러스터**는 구성되어 한 개의 특정 리전에서 **기본 [DB] 클러스터**를 최대 5개까지 쓰기를 사용할 수 있고, 그리고 **보조 [DB] 클러스터**의 다른 지역에서 각 읽기 전용으로 사용할 수 있습니다. 특정 **글로벌 클러스터** 의 각 DB 클러스터에는 자체 스토리지 볼륨이 있지만 데이터는 특수 제작된 낮은 지연 및 높은 처리량의 복제 시스템을 사용하여 **기본 클러스터** 에서 각 **보조 클러스터**로 비동기식으로 복제됩니다.
 
-Open the <a href="https://console.aws.amazon.com/rds/home#database:id=auroralab-mysql-cluster;is-cluster=true" target="_blank">Amazon RDS service console</a> at the MySQL DB cluster details page in the **primary** region. If you navigated to the RDS console by means other than the link in this paragraph, click on the `auroralab-mysql-cluster` in the **Databases** section of the RDS service console, and make sure you are back in the primary regions.
 
-!!! warning "Region Check"
-    Ensure you are still working in the **primary region**, especially if you are following the links above to open the service console at the right screen.
+위의 **1단계에서 다른 리전에 실습 환경만들기** 가 완료되면 계속 진행할 수 있습니다.
 
-First, you need to **disable** the **Backtrack** feature. At present database backtrack is not compatible with Aurora Global Databases, and a cluster with that feature active cannot be converted into a global database. Select the `auroralab-mysql-cluster` and click the **Modify** button.
 
-!!! note
-    If you have not completed the [Backtrack a DB Cluster](/provisioned/backtrack/) lab already, and wish to do so, or have been instructed to do so part of the event, please complete that lab now before moving forward. Once disabled, you will not be able to re-enable the backtrack feature on an existing DB cluster.
+**기본 리전** 의 MySQL DB 클러스터 세부 정보 페이지에서 <a href="https://console.aws.amazon.com/rds/home#database:id=auroralab-mysql-cluster;is-cluster=true" target="_blank">Amazon RDS 서비스 콘솔</a> 을 엽니다. 위 링크가 아닌 다른 방법으로 RDS 콘솔로 이동한 경우 RDS 서비스 콘솔의 **데이터베이스** 메뉴에서 `auroralab-mysql-cluster`를 클릭하고 **기본 리전**으로 돌아왔는지 확인합니다.
+
+!!! warning "리전 확인"
+    특히 위 링크를 따라 오른쪽 화면에서 서비스 콘솔을 여는 경우 **기본 지역** 에서 여전히 작업하고 있는지 확인합니다 .
+
+
+첫째, **역추적** 기능을 **해제**해야 합니다. 현재 데이터베이스 역추적은 Aurora 글로벌 데이터베이스와 호환되지 않으며 해당 기능이 활성화된 클러스터는 글로벌 데이터베이스로 변환할 수 없습니다. `auroralab-mysql-cluster`를 선택하고 **수정** 버튼을 클릭합니다.
+
+
+
+!!! 주의
+    [DB Cluster 역추적](/provisioned/backtrack/) 실습을 아직 완료 하지 않았거나 실습이 필요한 경우는 이 실습을 진행하기전에 지금 해당 실습을 완료하십시오. 비활성화되면 기존 DB 클러스터에서 역추적 기능을 다시 활성화 할 수 없습니다.
+
+
 
 <span class="image">![RDS Cluster Modify](rds-cluster-action-modify.png?raw=true)</span>
 
-Scroll down to the **Backtrack** section and choose the **Disable Backtrack** option, then click **Continue** at the bottom of the page.
+추가 구성 섹션(필요한 경우 확장)까지 아래로 스크롤하고 **역추적 활성화** 옵션을 선택 취소한 다음, 페이지 하단에서 **계속** 을 클릭합니다.
+
 
 <span class="image">![RDS Cluster Disable Backtrack](rds-cluster-disable-backtrack.png?raw=true)</span>
 
-In the **Scheduling of modifications** section, choose the **Apply immediately** option, then click **Modify cluster** to confirm the changes.
+**수정 예약** 섹션에서 **즉시 적용** 옵션을 선택한 다음, **클러스터 수정**을 클릭합니다.
+
 
 <span class="image">![RDS Cluster Confirm Changes](rds-cluster-modify-confirm.png?raw=true)</span>
 
-Once the modification is complete, and the DB cluster is in an `available` state again, from the **Actions** dropdown button, choose **Add region**.
 
-!!! note
-    You may need to refresh the web browser page after disabling Backtrack, before you can add a region. If **Add region** appears greyed out, please refresh the web browser page, or verify Backtrack was disabled correctly. 
+수정이 완료되고 DB 클러스터가 다시 `사용 가능` 상태가 되면 **작업** 드롭다운 버튼에서 **리전 추가**를 선택합니다.
+
+
+!!! 주의
+    리전 추가를 하기 전에 역추적을 비활성화한 후, 웹 브라우저 페이지를 새로 고쳐야 할 수 있습니다. **리전 추가**가 회색으로 표시되면 웹 브라우저 페이지를 새로 고침하거나 역추적이 올바르게 비활성화되었는지 확인하십시오.
+
 
 <span class="image">![RDS Cluster Add Region](rds-cluster-action-add.png?raw=true)</span>
 
-Set the following options on the configuration screen for the secondary DB cluster:
+보조 DB 클러스터의 구성 화면에서 다음 옵션을 설정합니다.
 
-1. In the **Global database settings** section:
-    * [ ] Set **Global database identifier** to `auroralab-mysql-global`
+1. **글로벌 데이터베이스 설정** 섹션에서 :
 
-2. In the **AWS Region** section:
-    * [ ] Choose the **Secondary region** of `US East (N. Virginia)`
+    * [ ] **글로벌 데이터베이스 식별자** 를 `auroralab-mysql-global`으로 설정
 
-3. In the **Connectivity** section, expand the sub-section called **Additional connectivity configuration**. This section allows you to specify where the database cluster will be deployed within your defined network configuration created above:
-    * [ ] Set **Virtual Private Cloud (VPC)** to `auroralab-vpc`
-    * [ ] Ensure the correct **Subnet Group** was selected automatically, it should be named `auroralab-db-subnet-group`.
-    * [ ] Make sure the **Publicly accessible** option is set to `No`
-    * [ ] For **VPC security group** select **Choose existing** and pick the security group named `auroralab-database-sg`, remove any other security groups, such as `default` from the selection
+2. **AWS 리전** 섹션에서 :
 
-4. Expand the **Advanced configuration** section, and configure the following options:
-    * [ ] Set **DB instance identifier** to `auroralab-mysql-node-3`
-    * [ ] Set **DB cluster identifier** to `auroralab-mysql-secondary`
-    * [ ] For **DB cluster parameter group** select the group with the stack name in the name (e.g. `auroralab-[...]`)
-    * [ ] For **DB parameter group** select the group with the stack name in the name (e.g. `auroralab-[...]`)
-    * [ ] Set **Backup retention period** to `1 day`
-    * [ ] **Check** the box for **Enable Performance Insights**
-    * [ ] Set **Retention period** to `Default (7 days)`
-    * [ ] Set **Master key** to `[default] aws/rds`
-    * [ ] **Check** the box for **Enable Enhanced Monitoring**
-    * [ ] Set **Granularity** to `1 second`
-    * [ ] Set **Monitoring Role** to `auroralab-monitor-[secondary-region]`
+    * [ ] **보조 리전**을 `US East (N. Virginia)`로 선택합니다.
 
-!!! note
-    Please note there are **two** monitoring roles in the list, one for the primary region (the one in the top right corner of your web page), the other for the secondary region (typically `us-east-1`). At this step, you need the **secondary** region one.
+3. **연결** 섹션에서 **추가 연결 구성**이라는 하위 섹션을 확장합니다. 이 섹션에서는 위에서 만든 정의된 네트워크 구성 내에서 데이터베이스 클러스터를 배포할 위치를 지정할 수 있습니다.
+
+    * [ ] **Virtual Private Cloud (VPC)** 을 `auroralab-vpc`로 설정합니다.
+    * [ ] **서브넷 그룹**은 자동으로 `auroralab-db-subnet-group`이 선택되었는지 확인합니다.
+    * [ ] **퍼블릭 액세스 가능** 옵션이 `No`로 설정되어 있는지 확인하십시오.
+    * [ ] **VPC 보안 그룹** 은 `auroralab-database-sg`를 선택하고, `default`와 같은 다른 보안 그룹은 제거합니다.
+
+4. **추가 구성** 섹션을 확장하고, 다음 옵션을 구성합니다.
+
+    * [ ] **DB 인스턴스 식별자**에 `auroralab-mysql-node-3`을 설정합니다.
+    * [ ] **DB 클러스터 식별자**로 `auroralab-mysql-secondary`를 설정합니다.
+    * [ ] **DB 클러스터 파라미터 그룹**에서 스택 이름으로 시작하는 그룹을 선택합니다.  (예 : auroralab-[...])
+    * [ ] **DB 파라미터 그룹**에서 스택 이름으로 시작하는 그룹을 선택합니다. (예 : auroralab-[...])
+    * [ ] **백업 보존 기간** 에 1일을 선택합니다.
+    * [ ] **성능 개선 도우미 활성화**을 체크합니다.
+    * [ ] **보존 기간** 을 `기본값 (7 일)`로 설정합니다.
+    * [ ] **마스터 키**는 `[default] aws/rds`를 설정합니다.
+    * [ ] **Enhanced 모니터링을 활성화를**를 체크합니다.
+    * [ ] **세부 수준**은 `1 초`로 설정합니다.
+    * [ ] **역할 모니터링** 에 `auroralab-monitor-[secondary-region]`를 설정합니다.
+
+!!! 주의
+    목록에는 **두 개**의 역할 모니터링이 있습니다. 하나는 기본 리전(웹 페이지의 오른쪽 상단 모서리에 있음)에 대한 역할이고 다른 하나는 보조 리전에 대한 역할 (일반적으로 `us-east-1`)입니다. 이 단계에서는 **보조 리전**이 필요합니다.
+
+
 
 <span class="image">![RDS Cluster Add Region](rds-cluster-add-region.png?raw=true)</span>
 
-??? tip "What do these selections mean?"
-    You will create a global cluster, a secondary DB cluster, and DB instance in that secondary cluster, with associated configurations in one step. Your existing DB cluster will become the primary DB cluster in the new global cluster. These are distinct API calls to the RDS service should you create a global cluster using the AWS CLI, SDKs or other tools. The RDS service console, simply combines these distinct steps into a single operation.
+??? tip "이러한 선택은 무엇을 의미합니까?""
+    한 단계로 연결된 구성을 사용하여 해당 보조 클러스터에 글로벌 클러스터, 보조 DB 클러스터 및 DB 인스턴스를 생성합니다. 기존 DB 클러스터는 새 글로벌 클러스터에서 기본 DB 클러스터가 됩니다. AWS CLI, SDK 또는 기타 도구를 사용하여 글로벌 클러스터를 생성하는 경우 RDS 서비스에 대한 별개의 API 호출입니다. RDS 서비스 콘솔은 이러한 개별 단계를 단일 작업으로 결합합니다.
 
-Click **Add region** to provision the global cluster.
 
-!!! note
-    Creating a global cluster based on the existing DB cluster is a seamless operation, your workload will not experience any disruption. You can monitor the performance metrics of the load generator started above, throughout this operation to validate.
+**리전 추가** 를 클릭 하여 글로벌 클러스터를 프로비저닝합니다.
 
-The global cluster, including the secondary DB cluster and instance may take up to 30 minutes to provision.
 
-In order to connect to the DB cluster and start using it, you need to retrieve the DB cluster endpoints. Unlike a regular DB cluster, only the **Reader Endpoint** is provisioned. The **Cluster Endpoint** is not being provisioned, as secondary DB clusters only contain readers, and cannot accept writes. The **Reader Endpoint** will always resolve to one of the reader DB instances and should be used for low latency read operations within that region. In the RDS console, go to the DB cluster detail view by clicking on the cluster DB identifier for the secondary DB cluster, named `auroralab-mysql-secondary`.
+!!! 주의
+    기존 DB 클러스터를 기반으로 글로벌 클러스터를 생성하는 것은 원활한 작업이며 워크로드가 중단되지 않습니다. 위에서 시작된 부하 생성기의 성능 메트릭을 모니터링하여 유효성을 검사 할 수 있습니다.
 
-The **Endpoints** section in the **Connectivity and security** tab of the details page displays the endpoints. Note these values down, as you will use them later.
+
+
+보조 DB 클러스터 및 인스턴스를 포함한 글로벌 클러스터를 프로비저닝하는데 최대 30분이 걸릴 수 있습니다.
+
+DB 클러스터에 연결하고 사용을 시작하려면 DB 클러스터 엔드포인트를 검색해야합니다. 일반 DB 클러스터와 달리 **읽기 엔드포인트** 만 프로비저닝됩니다. **클러스터 엔드포인트**는 보조 DB 클러스터는 읽기를 포함하기 때문에, 프로비저닝되지 않으며, 쓰기를 받아 들일 수 없습니다. **읽기 엔드포인트**는 항상 읽기 DB 인스턴스중 하나에 해결할 수와 낮은 지연 시간은 그 리전내에서 읽기 작업을 위해 사용되어야한다. RDS 콘솔에서  `auroralab-mysql-secondary`라는 보조 DB 클러스터의 클러스터 DB 식별자를 클릭하여 DB 클러스터 세부 정보보기로 이동합니다.
+
+**엔드포인트** 섹션 **연결 및 보안**에서 세부 사항 페이지가 표시 엔드포인트 탭을 선택합니다. 나중에 사용할 것이므로이 값을 적어 두십시오.
+
 
 <span class="image">![RDS Cluster Secondary Endpoints](rds-cluster-secondary-endpoints.png?raw=true)</span>
 
