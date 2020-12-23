@@ -26,7 +26,7 @@
 
 Aurora 글로벌 데이터베이스를 지원하기 위해 **미국 동부(버지니아 북부, us-east-1)** 리전에서 실습 환경을 프로비저닝 하려면 아래 **스택 생성**을 클릭하십시오 .
 
-<a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?stackName=auroralab&templateURL=https://s3.amazonaws.com/[[bucket]]/templates/lab_template.yml&param_deployCluster=No&param_deployML=No&param_deployGDB=Yes&param_isSecondary=Yes" target="_blank"><img src="/assets/images/cloudformation-launch-stack.png" alt="Launch Stack"></a>
+<a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?stackName=auroralab&templateURL=https://s3.amazonaws.com/ams-stack-prod-content-us-east-1/templates/lab_template.yml&param_deployCluster=No&param_deployML=No&param_deployGDB=Yes&param_isSecondary=Yes" target="_blank"><img src="/assets/images/cloudformation-launch-stack.png" alt="Launch Stack"></a>
 
 **스택 이름** 필드에서 값이 `auroralab`으로 설정되어 있는지 확인하십시오. 나머지 매개 변수에 대해 모든 기본값을 사용하십시오.
 

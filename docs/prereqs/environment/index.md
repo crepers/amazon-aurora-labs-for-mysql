@@ -67,8 +67,8 @@
 
     Option | One-Click 시작
     --- | ---
-    **DB 클러스터를 수동으로 생성하겠습니다.** | <a href="https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=auroralab&templateURL=https://s3.amazonaws.com/[[bucket]]/templates/lab_template.yml&param_deployCluster=No" target="_blank"><img src="/assets/images/cloudformation-launch-stack.png" alt="Launch Stack"></a>
-    **자동으로 Aurora 프로비저닝된 DB 클러스터 생성** | <a href="https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=auroralab&templateURL=https://s3.amazonaws.com/[[bucket]]/templates/lab_template.yml&param_deployCluster=Yes" target="_blank"><img src="/assets/images/cloudformation-launch-stack.png" alt="Launch Stack"></a>
+    **DB 클러스터를 수동으로 생성하겠습니다.** | <a href="https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=auroralab&templateURL=https://s3.amazonaws.com/ams-stack-prod-content-us-east-1/templates/lab_template.yml&param_deployCluster=No" target="_blank"><img src="/assets/images/cloudformation-launch-stack.png" alt="Launch Stack"></a>
+    **자동으로 Aurora 프로비저닝된 DB 클러스터 생성** | <a href="https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=auroralab&templateURL=https://s3.amazonaws.com/ams-stack-prod-content-us-east-1/templates/lab_template.yml&param_deployCluster=Yes" target="_blank"><img src="/assets/images/cloudformation-launch-stack.png" alt="Launch Stack"></a>
 
     ??? tip "CloudFormation 템플릿을 볼 수 있습니까?""
         예, CloudFormation 템플릿을 다운로드하고 생성중인 리소스 및 구성 방법을 검토하는 것이 좋습니다.
