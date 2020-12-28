@@ -1,7 +1,7 @@
-# 랩 환경을 사용하여 시작하기
+# 실습 환경을 사용하여 시작하기
 
 
-랩 환경에서 리소스를 사용하려면 몇 단계를 완료해야합니다.
+실습 환경에서 리소스를 사용하려면 몇 단계를 완료해야합니다.
 
 워크샵이나 기타 교육과 같은 공식 행사에 참석하는 경우 강사가 시작 방법에 대한 구체적인 지침을 제공합니다. 일반적으로 **Event Engine** 이라는 플랫폼을 통해 AWS 계정이 제공되며 실습 환경은 이미 해당 계정에 배포되어 있습니다. **Event Engine 사용 워크샵**인 경우 아래 탭을 선택합니다.
 
@@ -40,7 +40,7 @@
     이 단계를 완료하면 다음 실습을 계속할 수 있습니다. [**Session Manager 워크스테이션에 연결**](/prereqs/connect/)
 
 
-=== "랩 환경을 수동으로 배포해야 합니다."
+=== "실습 환경을 수동으로 배포해야 합니다."
     <h4>AWS Management Console에 연결</h4>
 
     공식적인 교육 설정에서 이러한 실습을 실행하는 경우 콘솔 URL과 제공된 자격 증명을 사용하여 AWS Management Console에 연결하고 로그인하십시오. 그렇지 않으면 자신의 자격 증명을 사용하십시오. <a href="https://console.aws.amazon.com/" target="_blank">https://console.aws.amazon.com/</a>에서 또는 회사에서 제공하는 SSO(Single Sign-On) 메커니즘을 통해 콘솔에 액세스할 수 있습니다.
@@ -61,7 +61,7 @@
 
     <h4>AWS CloudFormation을 사용하여 실습 환경 배포</h4>
 
-    실습 시작 경험을 단순화하기 위해 실습 환경에 필요한 리소스를 프로비저닝하는 <a href="https://aws.amazon.com/cloudformation/" target="_blank">AWS CloudFormation</a>용 기본 템플릿을 만들었습니다. 이러한 템플릿은 일관된 네트워킹 인프라와 랩에서 사용되는 소프트웨어 패키지 및 구성 요소의 클라이언트측 환경을 배포하도록 설계되었습니다.
+    실습 시작 경험을 단순화하기 위해 실습 환경에 필요한 리소스를 프로비저닝하는 <a href="https://aws.amazon.com/cloudformation/" target="_blank">AWS CloudFormation</a>용 기본 템플릿을 만들었습니다. 이러한 템플릿은 일관된 네트워킹 인프라와 실습에서 사용되는 소프트웨어 패키지 및 구성 요소의 클라이언트측 환경을 배포하도록 설계되었습니다.
 
     실행하려는 실습에 따라 가장 적합한 CloudFormation 템플릿을 선택하고 **스택 생성**을 클릭하십시오.
 

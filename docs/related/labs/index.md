@@ -1,6 +1,6 @@
 # Related Labs and Workshops
 
-Interested in more labs or demos of Amazon Aurora technology? You may like the following resources:
+Amazon Aurora 기술의 더 많은 실습이나 데모에 관심이 있으십니까? 다음 리소스를 확인하세요.
 
 * [Amazon Aurora Labs for PostgreSQL](https://awsauroralabspostgres.com/)
 * [Amazon RDS Purpose Built Workshop](https://github.com/aws-samples/amazon-rds-purpose-built-workshop)
