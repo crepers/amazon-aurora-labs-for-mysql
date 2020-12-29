@@ -1,72 +1,74 @@
-# Fail Back a Global Database
-
-This is an optional lab. You will attempt to orchestrate the required operation to restore writable database access back in the primary region, after promoting the secondary DB cluster in the secondary region. You will only see high level instructions. Please take your time in first planning out the reverse/restore actions, and feel free to raise your hand (if you are at an AWS event) to share with us your questions, thoughts and ideas!
-
-This lab contains the following tasks:
-
-1. Overview of fail over and fail back in Amazon Aurora
-2. End the simulated failure in the primary region
-3. Build a new Global Database
-4. Break the Global Database one more time
-5. Rebuild the final Global Database
-6. Delete the old secondary DB cluster
-7. Summary
-
-This lab requires the following prerequisites:
-
-* [Get Started](/prereqs/environment/) (choose the **Deploy Global DB** option)
-* [Connect to the Session Manager Workstation](/prereqs/connect/)
-* [Deploy an Aurora Global Database](/global/deploy/)
-* [Fail Over an Aurora Global Database](/global/failover/)
+# 글로벌 데이터베이스 장애 복구
 
 
-## 1. Overview of fail over and fail back in Amazon Aurora
-
-As illustrated in the previous lab, **Global Database failover** is the process of shifting application and database resources from the original primary region to a secondary disaster recovery region during a large scale infrastructure or service level interruption. 
-
-You may be able to design an application that is completely stateless and could be launched in any region, however the relational database tier, with Aurora Global Database, has one single writer DB instance, and it requires promotion of the secondary DB cluster in order for it to begin serving write requests. Changes are now only tracked on the DB cluster in the secondary region. This also required taking the secondary DB cluster out of the Aurora Global Database. The original Aurora Global Database remains, and replication continues with other secondary DB clusters in other regions if you have additional such extensions.
-
-When the large scale interruption is restored, you usually want to restore the environment to its original setting, and synchronizing the original primary region to become the master node to serve write traffic, back again. This process is called **failback**, an operation that would see us returning production to its original location after the disaster event and all normal operations restored, while keeping track and capturing all the changed data that has been written to the recently-promoted secondary region. As the original primary region's DB cluster is now restored, you also want to avoid a *split-brain* scenario. 
-
-To reiterate, for normal single-region scenarios, failover is automatic, and failback is usually unnecessary if the failover nodes are of the same instance family, type, and size. This also applies when the writer DB instance in the primary DB cluster of a Global Database fails. Failovers to other regions are typically not necessary in that case, as service is resotred automatically in the same region. Amazon Aurora DB clusters are available in AWS regions are resilient across multiple *Availability Zones*. This type of planning is only needed in the extremely unlikely scenario of failing over / failing back to a different region, because of a complete and likely longer time workload disruption in the primary region.
+이것은 선택적 실습입니다. 보조 리전에서 보조 DB 클러스터를 승격한 후 쓰기가능한 데이터베이스 액세스를 다시 기본 리전으로 복원하는데 필요한 작업을 조정하려고 시도합니다. 높은 수준의 지침만 표시됩니다. 먼저 복구 작업을 계획하는데 시간을 할애하고 질문, 생각 및 아이디어를 공유 할 수 있도록 손을 들어 주시기 바랍니다.(AWS 이벤트에 있는 경우!)
 
 
-## 2. End the simulated failure in the primary region
+이 실습에는 다음 작업이 포함됩니다.
 
-You were previously simulating a large scale regional/service level interruption by associating a **Network ACL (NACL)** rule that denies all network traffic with the subnets where the Aurora Global Database primary DB cluster was deployed. Let's revert this to end the traffic block.
+1. Amazon Aurora의 장애 조치 및 장애 복구 개요
+2. 기본 리전에서 시뮬레이션된 오류 종료
+3. 새로운 글로벌 데이터베이스 구축
+4. 글로벌 데이터베이스를 한 번 더 끊습니다.
+5. 최종 글로벌 데이터베이스 재구축
+6. 이전 보조 DB 클러스터 삭제
+7. 요약
 
-Go to your <a href="https://console.aws.amazon.com/vpc/home#acls:sort=networkAclId" target="_blank">VPC service console</a> in the **primary region** and remove the subnet associations from the NACL named **auroralab-denyall-nacl**. This will reconfigure the subnets to use the default NACL.
+이 실습에는 다음 전제 조건이 필요합니다.
 
-Since the data is now stale, and out of date compared to the secondary region Aurora DB cluster that was promoted, the Aurora DB cluster and DB instances in the primary region are no longer needed, for the purposes of the Global Database labs. Normally you would want to delete them, **but don't**. There may be other labs in your curriculum that depend on this DB cluster. 
-
-You can however delete the global cluster, by removing that original DB clsuter in the primary region, from the global cluster, and then deleting the global cluster.
-
-
-## 3. Build a new Global Database
-
-In the **secondary region**, add a region (**Actions** --> **Add Region**) for the DB cluster you have promoted named `auroralab-mysql-secondary`. Select the original primary region to add to this new Global Database, utilizing the existing VPC, security group, parameter groups (instance and cluster), and role settings. Name the DB cluster `auroralab-mysql-restored` and name the DB instance `auroralab-mysql-node4`. Name the Global Database identifier as `auroralabs-mysql-temporary`
-
-Allow 10-15 minutes for the new region replica in the previously primary region to be restored.
-
-Once that process is complete, you will have a Global Database again, with a *primary DB cluster* in the **secondary region** and a *secondary cluster* in the **primary region**. You should wait until all nodes in your Global Database are indicated with a status of **Available** before proceeding.
+* [시작](/prereqs/environment/) (**Deploy Global DB** 옵션 선택)
+* [Session Manager 워크스테이션에 연결](/prereqs/connect/)
+* [Aurora 글로벌 데이터베이스 배포](/global/deploy/)
+* [Aurora 글로벌 데이터베이스 장애 조치](/global/failover/)
 
 
-## 4. Break the Global Database one more time
+## 1. Amazon Aurora의 장애 조치 및 장애 복구 개요
 
-The objective is to *fail back*, which means restoring an equivalent to the original environment configuration. You need to promote the new secondary DB cluster in the **primary region**, named `auroralab-mysql-restored`, to be an independent DB cluster. Using the RDS Console in the **primary region**, select the cluster and choose **Actions** --> **Remove From Global**. This will promote it with the data intact and it will now become an independent DB cluster. 
+이전 실습에서 설명한 것처럼 **글로벌 데이터베이스 장애 조치**는 대규모 인프라 또는 서비스 수준 중단 중에 애플리케이션 및 데이터베이스 리소스를 원래 기본 리전애서 보조 재해 복구 리전으로 이동하는 프로세스입니다.
 
-## 5. Rebuild the final Global Database
+완전히 상태 비저장이고 모든 리전에서 시작할 수 있는 애플리케이션을 설계 할 수 있지만 Aurora 글로벌 데이터베이스를 사용하는 관계형 데이터베이스 계층에는 하나의 단일 쓰기 DB 인스턴스가 있으며 이를 위해서는 보조 DB 클러스터의 승격이 필요합니다. 쓰기 서비스를 시작합니다. 이제 변경 사항은 보조 리전의 DB 클러스터에서만 추적됩니다. 또한 Aurora 글로벌 데이터베이스에서 보조 DB 클러스터를 가져와야 했습니다. 원래 Aurora 글로벌 데이터베이스는 그대로 유지되며 추가 확장이있는 경우 다른 리전의 다른 보조 DB 클러스터에서 복제가 계속됩니다.
 
-In the **primary region**, add a region (**Actions** --> **Add Region**) for the DB cluster you have just promoted named `auroralab-mysql-restored`. Select the secondary region to add to this new Global Database, utilizing the existing VPC, security group, parameter groups (instance and cluster), and role settings. Name the DB cluster `auroralab-mysql-new-secondary` and name the DB instance `auroralab-mysql-node5`. Name the Global Database identifier as `auroralabs-mysql-global` (assuming you have deleted the old global cluster construct adter detaching the original primary cluster, if not name it something else).
+대규모 중단이 복원되면 일반적으로 환경을 원래 설정으로 복원하고 원래 기본 리전을 동기화하여 쓰기 트래픽을 제공하는 마스터 노드가 되도록 합니다. 이 프로세스를 **장애 복구** 라고 합니다. 이 작업은 재해 상황 및 모든 정상 작업이 복원된 후 프로덕션을 원래 위치로 되돌리는 동시에 최근에 승격된 보조 지역에 기록된 모든 변경된 데이터를 추적하고 캡처하는 작업입니다. 이제 원래 기본 리전의 DB 클러스터가 복원되었으므로 *분할(split-brain)* 시나리오도 피하려고 합니다.
+
+다시 말하면, 일반적인 단일 리전 시나리오의 경우 장애 조치는 자동이며 장애 조치 노드가 동일한 인스턴스 패밀리, 유형 및 크기인 경우 일반적으로 장애 복구가 필요하지 않습니다. 이는 글로벌 데이터베이스의 기본 DB 클러스터에 있는 쓰기 DB 인스턴스가 실패한 경우에도 적용됩니다. 서비스가 동일한 리전에 자동으로 다시 지정되므로 일반적으로 다른 리전에 대한 장애 조치는 필요하지 않습니다. Amazon Aurora DB 클러스터는 AWS 리전에서 사용할 수 있으며 여러 *가용 영역*에서 탄력적 입니다. 이러한 유형의 계획은 기본 리전에서 완전하고 오랜 시간 동안 워크로드 중단이 발생하기 때문에 다른 리전으로 장애 조치/장애 복구하는 극히 드문 시나리오에서만 필요합니다.
+
+## 2. 기볼 리전에서 시뮬레이션된 오류 종료
+
+이전에는 모든 네트워크 트래픽을 거부하는 **네트워크 ACL (NACL)** 규칙을 Aurora 글로벌 데이터베이스 기본 DB 클러스터가 배포된 서브넷과 연결하여 대규모 리전/서비스 수준 중단을 시뮬레이션 했습니다. 이를 되돌려 트래픽 차단을 종료하겠습니다.
+
+**기본 리전**에서 <a href="https://console.aws.amazon.com/vpc/home#acls:sort=networkAclId" target="_blank"> VPC 서비스 콘솔</a>로 이동합니다. 그리고 NACL에서 **auroralab-denyall-nacl**이라는 서브넷 연결을 제거합니다. 이렇게하면 기본 NACL을 사용하도록 서브넷이 재구성됩니다.
+
+이제 데이터가 부실하고 승격된 보조 리전 Aurora DB 클러스터와 비교할때 오래되었으므로 글로벌 데이터베이스 실습을 위해 Aurora DB 클러스터와 기본 리전의 DB 인스턴스가 더 이상 필요하지 않습니다. 일반적으로 삭제하고 싶지만 **하지 마세요**. 이 DB 클러스터에 의존하는 다른 실습이 있을 수 있습니다.
+
+그러나 기본 리전의 원래 DB clsuter를 전역 클러스터에서 제거한 다음 전역 클러스터를 삭제하여 전역 클러스터를 삭제할 수 있습니다.
 
 
-## 6. Delete the old secondary DB cluster
+## 3. 새로운 글로벌 데이터베이스 구축
 
-In the secondary region, you can now delete the old secondary DB cluster, named `auroralab-mysql-secondary`. Now you should have an Aurora Global Database with one *primary DB cluster* in your **primary region** and a *secondary DB cluster* in the **secondary region**.
+**보조 리전**에서 승격한 DB 클러스터의 이름이 `auroralab-mysql-secondary` 에 리전(**작업**-> **리전 추가**)을 추가합니다. 기존 VPC, 보안 그룹, 파라미터 그룹 (인스턴스 및 클러스터) 및 역할 설정을 활용하여 새 글로벌 데이터베이스에 추가할 원래 기본 리전을 선택합니다. DB 클러스터 이름을 `auroralab-mysql-restored`로 지정하고 DB 인스턴스 이름을 `auroralab-mysql-node4`로 지정합니다. 글로벌 데이터베이스 식별자의 이름을 `auroralabs-mysql-temporary` 로 지정합니다.
+
+이전 기본 지역의 새 지역 복제본이 복원 될때까지 10-15분 정도 걸립니다.
+
+이 프로세스가 완료되면 **보조 리전**에 *기본 DB 클러스터*가 있고 **기본 리전**에 *보조 클러스터*가 있는 글로벌 데이터베이스가 다시 생성됩니다. 계속하기 전에 글로벌 데이터베이스의 모든 노드가 **사용 가능** 상태로 표시될 때까지 기다려야 합니다.
 
 
-## 7. Summary
+## 4. 글로벌 데이터베이스를 한 번 더 끊습니다.
 
-Now that you have the Global Database restored completely to its original regional configuration. Typically as you are promoting and extending the global database through the failback cycle, you will have to update the database endpoints your application is using to reflect all the intermediary steps, in order to avoid significant application downtime. As you have seen the endpoints may change several times, and the fail-back should be orchestrated gradually to ensure you have full DR capability at any given point in time.
+목표는 *장애 복구*이며, 이는 원래 환경 구성과 동등한 것을 복원하는 것을 의미합니다. **기본 리전**에서 `auroralab-mysql-restored` 라는 새 보조 DB 클러스터를 독립 DB 클러스터로 승격해야 합니다. **기본 리전**에서 RDS 콘솔을 사용하여 클러스터를 선택하고 **작업** -> **글로벌에서 제거** 를 선택합니다. 이렇게 하면 데이터가 그대로 유지되고 이제는 독립 DB 클러스터가 됩니다.
 
-In a real world scenario, you can combine this with Route53 friendly DNS names (CNAME records) to point to the different and changing Aurora reader and writer endpoints, to minimize the amount of manual work you have to undertake to re-link your applications due to failover and reconfiguration. You can read more about this in our <a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-rds-db.html" target="_blank"> Route53 documentation</a>.
+
+## 5. 최종 글로벌 데이터베이스 재구축
+
+**기본 리전** 에서 방금 승격한 DB 클러스터에 대한 리전(**작업**-> **리전 추가**)을 `auroralab-mysql-restored` 로 추가합니다. 기존 VPC, 보안 그룹, 파라미터 그룹 (인스턴스 및 클러스터) 및 역할 설정을 활용하여 새 글로벌 데이터베이스에 추가할 보조 리전을 선택합니다. DB 클러스터 이름을 `auroralab-mysql-new-secondary` 로 지정하고 DB 인스턴스 이름을 `auroralab-mysql-node5` 로 지정합니다. 글로벌 데이터베이스 식별자의 이름을 `auroralabs-mysql-global` 으로 지정합니다.(원래 기본 클러스터를 분리하는 이전 글로벌 클러스터 구성을 삭제했다고 가정)
+
+
+## 6. 이전 보조 DB 클러스터 삭제
+
+이제 보조 리전에서 `auroralab-mysql-secondary` 라는 이전 보조 DB 클러스터를 삭제할 수 있습니다. 이제 **기본 리전** 에 *기본 DB 클러스터* 가 하나있고 **보조 리전** 에 *보조 DB 클러스터* 가 있는 Aurora 글로벌 데이터베이스가 있어야 합니다.
+
+
+## 7. 요약
+
+이제 전역 데이터베이스가 원래 리전 구성으로 완전히 복원되었습니다. 일반적으로 장애 복구주기를 통해 전역 데이터베이스를 승격하고 확장할 때 심각한 애플리케이션 다운 타임을 방지하기 위해 모든 중간 단계를 반영하기 위해 애플리케이션에서 사용하는 데이터베이스 엔드포인트를 업데이트 해야합니다. 이미 살펴본 바와 같이 엔드포인트는 여러번 변경될 수 있으며, 주어진 시점에서 완전한 DR 기능을 갖출 수 있도록 장애 복구를 점진적으로 조정해야 합니다.
+
+실제 시나리오에서 이를 Route53의 DNS 이름(CNAME 레코드)과 결합하여 달라지고 변경되는 Aurora 읽기 및 쓰기 엔드포인트를 가리켜 장애 조치 및 재구성으로 인해 애플리케이션을 다시 연결하기 위해 수행해야하는 수동 작업의 양을 최소화 할 수 있습니다. 이에 대한 자세한 내용은 <a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-rds-db.html" target="_blank"> Route53 설명서</a> 에서 확인할 수 있습니다.
