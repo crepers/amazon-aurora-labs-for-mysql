@@ -1,100 +1,95 @@
-# Create an Aurora Serverless DB Cluster
+# Aurora 서버리스 DB 클러스터 생성
 
-This lab will walk you through the steps of creating an Amazon Aurora Serverless database cluster manually, and configuring the scaling parameters of the cluster.
+이 실습에서는 Amazon Aurora Serverless 데이터베이스 클러스터를 수동으로 생성하고 클러스터의 스케일링 파라미터를 구성하는 단계를 안내합니다.
 
-This lab contains the following tasks:
+이 실습에는 다음 작업이 포함됩니다.
 
-1. Create a serverless DB cluster
-2. Create a secret to store the credentials
+1. 서버리스 DB 클러스터 생성
+2. 자격 증명을 저장할 암호 만들기
 
-This lab requires the following lab modules to be completed first:
+이 실습에서는 먼저 다음 실습 모듈을 완료해야합니다.
 
-* [Get Started](/prereqs/environment/) (you do not need to provision a DB cluster automatically)
+* [시작](/prereqs/environment/)(DB 클러스터를 자동으로 프로비저닝 할 필요가 없음)
 
 
-## 1. Create a serverless DB cluster
+## 1. 서버리스 DB 클러스터 생성
 
-Open the <a href="https://console.aws.amazon.com/rds/home" target="_blank">Amazon RDS service console</a>, if you don't already have it open.
+아직 서비스 콘솔이 열려있지 않은 경우, <a href="https://console.aws.amazon.com/rds/home" target="_blank">Amazon RDS 서비스 콘솔 </a>을 엽니다.
 
-Click **Create database** to start the configuration process
+**데이터베이스 생성** 버튼을 클릭하여 생성 프로세스를 시작합니다.
 
 <span class="image">![Create Database](1-create-database.png?raw=true)</span>
 
-In the first configuration section of the **Create database** page, ensure the **Standard Create** database creation method is selected.
+**데이터베이스 생성** 페이지의 첫 번째 구성 섹션 데이터베이스 생성 방식 선택이 **표준 생성**으로 선택되어 있는지 확인합니다.
 
-Next, in the **Engine options** section, choose the **Amazon Aurora** engine type, the **Amazon Aurora with MySQL compatibility edition**, the **Aurora (MySQL)-5.6.10a** version and the **Regional** database location.
+다음으로 **엔진 옵션** 섹션에서 **Amazon Aurora** 엔진 옵션, 에디션은 **MySQL과 호환되는 Amazon Aurora**, 용량 유형은 **서버리스**, 버전은 **Aurora (MySQL)-5.6.10a**를 선택합니다. 지금까지 선택한 사항은 AWS가 서버리스 구성에서 최신 버전의 MySQL 5.6 호환 엔진을 사용하여 Aurora MySQL 데이터베이스 클러스터를 생성하도록 하게합니다.
 
 <span class="image">![Engine Options](1-engine-options.png?raw=true)</span>
 
-In the **Database features** section, select **Serverless**. The selections so far will instruct AWS to create an Aurora MySQL database cluster with the most recent version of the MySQL 5.6 compatible engine in a serverless configuration.
-
-In the **Settings** section set the database cluster identifier to `auroralab-mysql-serverless`. Configure the name and password of the master database user, with the most elevated permissions in the database. We recommend to use the user name `masteruser` for consistency with subsequent labs and a password of your choosing. For simplicity ensure the check box **Auto generate a password** is **not checked**.
+**설정** 섹션에서 DB 클러스터 식별자를 `auroralab-mysql-serverless`로 설정합니다. 데이터베이스에서 가장 높은 권한으로 데이터베이스 마스터 사용자의 이름과 암호를 구성합니다. 후속 실습과의 일관성을 위해 사용자 이름 'masteruser'를 사용하고 선택한 비밀번호를 사용하는 것이 좋습니다. 편의상 * 암호 자동 생성** 확인란이 **체크되지 않음**을 확인합니다.
 
 <span class="image">![Database Settings](1-serverless-settings.png?raw=true)</span>
 
-In the **Capacity settings** section, choose a **Minimum Aurora capacity unit** of `1 (2GB RAM)` and a **Maximum Aurora capacity unit** of `16 (32 GB RAM)`. Next, expand the **Additional scaling configuration** section, and **check** the box next to **Pause compute capacity after consecutive minutes of inactivity**. This configuration will allow Aurora Serverless to scale the capacity of your DB cluster between 1 capacity unit and 32 capacity units, and to suspect capacity entirely after 5 minutes of inactivity.
+**용량 설정** 섹션에서 **최소 Aurora 용량 단위**를 `1 (2GB RAM)` 으로 선택하고 **최대 Aurora 용량 단위**를 `16 (32GB RAM)`으로 선택합니다. 그런 다음 **추가 조정 구성** 섹션을 확장하고 **다음 시간(분) 동안 비활성 상태 지속 후 컴퓨팅 용량 일시 정지** 옆의 확인란을 **선택**합니다. 이 구성을 통해 Aurora 서버리스는 1개의 용량 단위에서 32개의 용량 단위 사이에서 DB 클러스터의 용량을 확장하고 5분 동안 활동이 없으면 용량을 완전히 중지 할 수 있습니다.
 
-In the **Connectivity** section, expand the sub-section called **Additional connectivity configuration**. This section allows you to specify where the database cluster will be deployed within your defined network configuration. Your environment has been deployed with a VPC that includes all resources needed for an Aurora database cluster. This includes the VPC itself, subnets, DB subnet groups, security groups and several other networking constructs. All you need to do is select the appropriate existing connectivity controls in this section.
+**연결** 섹션에서 **추가 연결 구성**이라는 하위 섹션을 확장합니다. 이 섹션에서는 정의된 네트워크 구성 내에서 데이터베이스 클러스터를 배포 할 위치를 지정할 수 있습니다. Aurora 데이터베이스 클러스터에 필요한 모든 리소스를 포함하는 VPC로 환경이 배포되었습니다. 여기에는 VPC 자체, 서브넷, DB 서브넷 그룹, 보안 그룹 및 기타 여러 네트워킹 구성이 포함됩니다. 이 섹션에서 적절한 기존 연결 제어를 선택하기만 하면 됩니다.
 
-Pick the **Virtual Private Cloud (VPC)** named `auroralab-vpc`. The lab environment also configured a **VPC security group** that allows your lab workspace EC2 instance to connect to the database. Make sure the **Choose existing** security group option is selected and from the dropdown pick the security group named `auroralab-database-sg`. Please remove any other security groups, such as `default` from the selection.
-
-Additionally, please check the box **Data API**, to enable integration with the RDS Data API.
+`auroralab-vpc` 라는 **Virtual Private Cloud (VPC)**를 선택합니다. 실습 환경에서는 실습 작업 공간 EC2 인스턴스가 데이터베이스에 연결할 수 있도록 **VPC 보안 그룹**도 구성했습니다. **기존 항목 선택** 보안 그룹 옵션이 선택되어 있는지 확인하고 드롭 다운에서`auroralab-database-sg`라는 보안 그룹을 선택합니다. 선택에서 `default` 와 같은 다른 보안 그룹을 제거하십시오.
 
 <span class="image">![Capacity and Connectivity](1-serverless-capacity.png?raw=true)</span>
 
-Next, expand the **Additional configuration** section. Type `mylab` in the **Initial database name** text  box. Choose a `1 day` **Backup retention period**. **De-select** the check box **Enable delete protection**. In a production use case, you will want to leave that option checked, but for testing purposes, un-checking this option will make it easier to clean up the resources once you have completed the labs.
+다음으로 **추가 구성** 섹션을 확장합니다. **초기 데이터베이스 이름** 텍스트 상자에 `mylab` 을 입력합니다. **백업 보관 기간**을 `1 일` 로 선택합니다. **삭제 방지 활성화** 확인란을 **선택 취소**합니다. 프로덕션 사용 사례에서는 해당 옵션을 선택된 상태로 두어야하지만 테스트 목적으로 이 옵션을 선택 취소하면 실습을 완료한 후 리소스를 더 쉽게 정리할 수 있습니다.
 
 <span class="image">![Advanced configuration](1-serverless-advconfig.png?raw=true)</span>
 
-??? tip "What do these selections mean?"
-    You will create a database cluster with the following characteristics:
+??? tip "이러한 선택은 무엇을 의미합니까?"
+     다음과 같은 특성을 가진 데이터베이스 클러스터를 생성합니다.
 
-    * Aurora MySQL 5.6 compatible (latest engine version)
-    * Serverless db cluster scaling between 1 and 16 capacity units, and pausing compute capacity after 5 minutes of inactivity
-    * Deployed in the VPC and using the network configuration of the lab environment
-    * Integrated with the RDS Data API
-    * Automatically backed up continuously, retaining backups for 7 days
-    * Using data at rest encryption
+     * Aurora MySQL 5.6 호환 (최신 엔진 버전)
+     * 서버리스 db 클러스터는 1 ~ 16 용량 단위로 확장되고, 5분 동안 활동이 없으면 컴퓨팅 용량 일시 중지
+     * VPC에 배포되고 랩 환경의 네트워크 구성 사용
+     * 연속 자동 백업, 7일 동안 백업 유지
+     * 저장 데이터 암호화 사용
 
-Click **Create database** to provision the DB cluster.
+**데이터베이스 생성**을 클릭하여 DB 클러스터를 프로비저닝합니다.
 
-Once back to the list of databases, click the name of the new database in the listing.
+데이터베이스 목록으로 돌아가면, 목록에서 새 데이터베이스의 이름을 클릭합니다.
 
 <span class="image">![Select Cluster](1-serverless-selection.png?raw=true)</span>
 
-In the details view of the cluster, click on the **Configuration** tab. Note the value for **ARN**. Write this down, you will need it later.
+클러스터의 세부정보 보기에서 **구성** 탭을 클릭합니다. **ARN**의 값을 확인합니다. 이것을 적어 두십시오. 나중에 필요합니다.
 
 <span class="image">![CLuster ARN](1-serverless-arn.png?raw=true)</span>
 
 
-## 2. Create a secret to store the credentials
+## 2. 자격 증명을 저장할 암호를 만듭니다.
 
-Open the <a href="https://console.aws.amazon.com/secretsmanager/home" target="_blank">AWS Secrets Manager service console</a>.
+<a href="https://console.aws.amazon.com/secretsmanager/home" target="_blank"> AWS Secrets Manager 서비스 콘솔 </a>을 엽니다.
 
-Click **Store a new secret** to start the configuration process.
+**새 보안 암호 저장**을 클릭하여 구성 프로세스를 시작합니다.
 
 <span class="image">![Create Secret](2-create-secret.png?raw=true)</span>
 
-In the **Select secret type** section, choose **Credentials for RDS database**, then input the **User name** (e.g. `masteruser`) and **Password** that you provided when you created the serverless DB cluster.
+**보안 암호 유형 선택** 섹션에서 **RDS 데이터베이스에 대한 자격 증명**을 선택한 다음 서버리스 DB 클러스터를 만들때 제공한 **사용자 이름** (예 :`masteruser`) 및 **비밀번호**를 입력합니다.
 
-Next, in the **Select which RDS database this secret will access** section, choose the DB cluster identifier you assigned to your cluster (e.g. `auroralab-mysql-serverless`). Click **Next**.
+다음으로 **이 보안 암호로 액세스할 RDS 데이터베이스 선택** 섹션에서 클러스터에 할당한 DB 클러스터 식별자 (예 :`auroralab-mysql-serverless`)를 선택합니다. **다음**을 클릭합니다.
 
 <span class="image">![Configure Secret](2-config-secret.png?raw=true)</span>
 
-Name the secret `auroralab-mysql-serverless-secret` and provide a relevant description for the secret, then click **Next**.
+보안 암호의 이름을 `auroralab-mysql-serverless-secret` 으로 지정하고 암호에 대한 관련 설명을 입력한 후 **다음**을 클릭합니다.
 
 <span class="image">![Name Secret](2-name-secret.png?raw=true)</span>
 
-Finally, in the **Configure automatic rotation** section, leave the option of **Disable automatic rotation** selected. In a production environment you will want to use database credentials that rotate automatically for additional security. Click **Next**.
+마지막으로 **자동 교체 구성** 섹션에서 **자동 교체 비활성화** 옵션을 선택된 상태로 둡니다. 프로덕션 환경에서는 추가 보안을 위해 자동으로 교체되는 데이터베이스 자격 증명을 사용하는것이 좋습니다. **다음**을 클릭합니다.
 
 <span class="image">![Rotate Secret](2-rotate-secret.png?raw=true)</span>
 
-In the **Review** section you have the ability to check the configuration parameters for your secret, before it gets created. Additionally, you can retrieve sample code in popular programming languages, so you can easily retrieve secrets into your application. Click **Store** at the bottom of the screen.
+**검토** 섹션에서 새 보안 암호가 생성되기 전에 구성 정보를 확인할 수 있습니다. 또한 널리 사용되는 프로그래밍 언어로 된 샘플 코드를 검색할 수 있으므로 애플리케이션에 대한 보안 암호를 쉽게 개발할 수 있습니다. 화면 하단의 **저장**을 클릭합니다.
 
-Once created, identify the **ARN** of the newly created secret. This value will be needed in subsequent labs. In the list of **Secrets** in the console, click on the name of the newly created secret.
+생성되면 새로 생성된 보안 암호의 **ARN**을 확인니다. 이 값은 후속 실습에서 필요합니다. 콘솔의 **보안 암호** 목록에서 새로 생성된 보안 암호의 이름을 클릭합니다.
 
 <span class="image">![List Secrets](2-list-secrets.png?raw=true)</span>
 
-In the detail view of the secret, note the value for **Secret ARN**. Write this down, you will need it later.
+보안 암호 세부 정보보기에서 **보안 암호 ARN**의 값을 확인합니다. 이것을 적어 두십시오. 나중에 필요합니다.
 
 <span class="image">![Secret ARN](2-arn-secret.png?raw=true)</span>
